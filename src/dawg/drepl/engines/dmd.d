@@ -57,6 +57,7 @@ struct DMDEngine
         _tmpDir = tmpDir;
         if (_tmpDir.exists) rmdirRecurse(_tmpDir);
         mkdirRecurse(_tmpDir);
+        buildMod0();
     }
 
     ~this()
@@ -66,32 +67,23 @@ struct DMDEngine
 
     Tuple!(EngineResult, string) evalDecl(in char[] decl)
     {
-        auto path = buildPath(_tmpDir, format("__mod%s", _id));
-        auto f = writeHeader(path);
-        f.writefln(q{
+        auto m = newModule();
+        m.f.writefln(q{
             %1$s
 
-            extern(C) string[] __decls()
+            extern(C) string[] _decls()
             {
-                return [__traits(allMembers, __mod%2$s)];
+                return [__traits(allMembers, _mod%2$s)];
             }
             }.outdent(), decl, _id);
-        f.close();
+        m.f.close();
 
-        if (auto err = compileModule(path))
+        if (auto err = compileModule(m.path))
             return error(err);
 
         ++_id;
 
-        import core.runtime, core.demangle, core.sys.posix.dlfcn;
-
-        auto lib = Runtime.loadLibrary(path~".so");
-        if (lib is null)
-        {
-            auto msg = dlerror(); import core.stdc.string : strlen;
-            return error("failed to load "~path~".so ("~msg[0 .. strlen(msg)].idup~")");
-        }
-        auto func = cast(string[] function())dlsym(lib, "__decls");
+        auto func = cast(string[] function())loadFunc(m.path, "_decls");
         try
             return success(func()[1 .. $].filter!(d => !d.startsWith("_")).join(", "));
         catch (Exception e)
@@ -100,92 +92,95 @@ struct DMDEngine
 
     Tuple!(EngineResult, string) evalExpr(in char[] expr)
     {
-        auto path = buildPath(_tmpDir, format("__mod%s", _id));
-        auto f = writeHeader(path);
-        f.writefln(q{
-                extern(C) string __expr()
+        auto m = newModule();
+        m.f.writefln(q{
+                extern(C) string _expr()
                 {
-                    static if (is(typeof(%1$s) == string))
-                    {
-                        return (%1$s).idup; // copy static strings to GC heap
-                    }
-                    else static if (is(typeof(%1$s) == void))
-                    {
-                        return "void".idup;
-                    }
-                    else
-                    {
-                        import std.conv : to;
-                        return to!string(%1$s);
-                    }
+                    return _toString(%1$s);
                 }
             }.outdent(), expr);
-        f.close();
+        m.f.close();
 
-        if (auto err = compileModule(path))
+        if (auto err = compileModule(m.path))
             return error(err);
 
         ++_id;
 
-        import core.runtime, core.demangle, core.sys.posix.dlfcn;
-
-        auto lib = Runtime.loadLibrary(path~".so");
-        if (lib is null)
-        {
-            auto msg = dlerror(); import core.stdc.string : strlen;
-            return error("failed to load "~path~".so ("~msg[0 .. strlen(msg)].idup~")");
-        }
-        auto func = cast(string function())dlsym(lib, "__expr");
+        auto func = cast(string function())loadFunc(m.path, "_expr");
         try
             return success(func());
         catch (Exception e)
-            return error(e.toString());
+            return error(e.msg);
     }
 
     Tuple!(EngineResult, string) evalStmt(in char[] stmt)
     {
-        auto path = buildPath(_tmpDir, format("__mod%s", _id));
-        auto f = writeHeader(path);
-        f.writefln(q{
-                extern(C) void __run()
+        auto m = newModule();
+        m.f.writefln(q{
+                extern(C) void _run()
                 {
                     %s
                 }
             }, stmt);
-        f.close();
+        m.f.close();
 
-        if (auto err = compileModule(path))
+        if (auto err = compileModule(m.path))
             return error(err);
 
         ++_id;
 
-        import core.runtime, core.demangle, core.sys.posix.dlfcn;
-
-        auto lib = Runtime.loadLibrary(path~".so");
-        if (lib is null)
-        {
-            auto msg = dlerror(); import core.stdc.string : strlen;
-            return error("failed to load "~path~".so ("~msg[0 .. strlen(msg)].idup~")");
-        }
-        auto func = cast(void function())dlsym(lib, "__run");
+        auto func = cast(void function())loadFunc(m.path, "_run");
         try
             return func(), success("");
         catch (Exception e)
-            return error(e.toString());
+            return error(e.msg);
     }
 
 private:
-    File writeHeader(string path)
+    void buildMod0()
     {
+        auto mod = newModule();
+        mod.f.writeln(q{
+                string _toString(T)(auto ref T t)
+                {
+                    import std.conv : to;
+                    return to!string(t);
+                }
+
+                string _toString(Args...)(auto ref Args args) if (Args.length > 1)
+                {
+                    string res = "tuple(";
+                    foreach (i, a; args)
+                    {
+                        if (i) res ~= ", ";
+                        res ~= _toString(a);
+                    }
+                    res ~= ")";
+                    return res;
+                }
+        });
+        if (auto err = compileModule(mod.path))
+            throw new Exception(err);
+        ++_id;
+    }
+
+    Tuple!(File, "f", string, "path") newModule()
+    {
+        auto path = buildPath(_tmpDir, format("_mod%s", _id));
         auto f = File(path~".d", "w");
+        writeHeader(f);
+        return typeof(return)(f, path);
+    }
+
+    void writeHeader(ref File f)
+    {
         if (_id > 0)
         {
-            f.write("import __mod0");
-            foreach (i; 0 .. _id)
-                f.writef(", __mod%s", i);
+            f.write("import _mod0");
+            foreach (i; 1 .. _id)
+                f.writef(", _mod%s", i);
             f.write(";");
         }
-        return f;
     }
 
     string compileModule(string path)
@@ -194,7 +189,7 @@ private:
         auto args = ["dmd", "-I"~_tmpDir, "-of"~path~".so", "-fPIC",
                      "-shared", path, "-L-l:libphobos2.so"];
         foreach (i; 0 .. _id)
-            args ~= "-L"~_tmpDir~format("/__mod%s.so", i);
+            args ~= "-L"~_tmpDir~format("/_mod%s.so", i);
         auto dmd = execute(args);
         enum cleanErr = ctRegex!(`^.*Error: `, "m");
         if (dmd.status != 0)
@@ -202,6 +197,19 @@ private:
         if (!exists(path~".so"))
             return path~".so not found";
         return null;
+    }
+
+    void* loadFunc(string path, string name)
+    {
+        import core.runtime, core.demangle, core.sys.posix.dlfcn;
+
+        auto lib = Runtime.loadLibrary(path~".so");
+        if (lib is null)
+        {
+            auto msg = dlerror(); import core.stdc.string : strlen;
+            throw new Exception("failed to load "~path~".so ("~msg[0 .. strlen(msg)].idup~")");
+        }
+        return dlsym(lib, toStringz(name));
     }
 
     Tuple!(EngineResult, string) error(string msg)
