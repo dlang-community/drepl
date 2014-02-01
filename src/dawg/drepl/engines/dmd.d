@@ -161,17 +161,15 @@ private:
 
     string compileModule(string path)
     {
+        import std.regex;
         auto args = ["dmd", "-I"~_tmpDir, "-of"~path~".so", "-fPIC",
                      "-shared", path, "-L-l:libphobos2.so"];
         foreach (i; 0 .. _id)
             args ~= "-L"~_tmpDir~format("/__mod%s.so", i);
         auto dmd = execute(args);
+        enum cleanErr = ctRegex!(`^.*Error: `, "m");
         if (dmd.status != 0)
-        {
-            auto err = dmd.output;
-            err = err.find("Error: ");
-            return err[7 .. $].stripRight();
-        }
+            return dmd.output.replaceAll(cleanErr, "");
         if (!exists(path~".so"))
             return path~".so not found";
         return null;

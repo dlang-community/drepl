@@ -2,7 +2,7 @@
 html
   head
     title D REPL
-    link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.css')
+    link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css')
   :css
     #terminal {
       font-family: monospace;
