@@ -69,7 +69,8 @@ struct DMDEngine
     {
         auto m = newModule();
         m.f.writefln(q{
-            %1$s
+            // for public imports
+            public %1$s
 
             extern(C) string[] _decls()
             {
