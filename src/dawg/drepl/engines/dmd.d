@@ -7,11 +7,40 @@ module dawg.drepl.engines.dmd;
 import dawg.drepl.engines;
 import std.algorithm, std.exception, std.file, std.path, std.process, std.range, std.stdio, std.string, std.typecons;
 
+//------------------------------------------------------------------------------
+// tmpfile et. al.
+
+// should be in core.stdc.stdlib
+version (Posix) extern(C) char* mkdtemp(char* template_);
+
+string mkdtemp()
+{
+    version (Posix)
+    {
+        import core.stdc.string : strlen;
+        auto tmp = buildPath(tempDir(), "drepl.XXXXXX\0").dup;
+        auto dir = mkdtemp(tmp.ptr);
+        return dir[0 .. strlen(dir)].idup;
+    }
+    else
+    {
+        import std.format, std.random;
+        string path;
+        do
+        {
+            path = buildPath(tempDir(), format("drepl.%06X\0", uniform(0, 0xFFFFFF)));
+        } while (path.exists);
+        return path;
+    }
+}
+
+//------------------------------------------------------------------------------
+
 DMDEngine dmdEngine()
 {
     import core.sys.posix.unistd, std.random;
     auto compiler = environment.get("DMD", "dmd");
-    auto tmpDir = format("/tmp/.drepl-%d/%d", getuid(), uniform(0, 1000));
+    auto tmpDir = mkdtemp();
     return DMDEngine(compiler, tmpDir);
 }
 
