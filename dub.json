@@ -26,7 +26,8 @@
                 "vibe-d": ">=0.7.18"
             },
             "targetType": "executable",
-            "sourcePaths": ["examples/server.d"],
+            "stringImportPaths": ["examples"],
+            "sourceFiles": ["examples/server.d"],
         }
     ],
     "dependencies": {
