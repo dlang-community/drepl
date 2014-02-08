@@ -95,14 +95,6 @@ private:
         return !hasErr && !parser.moreTokens();
     }
 
-    bool balancedParens() const
-    {
-        auto s = _incomplete.data;
-        return .balancedParens(s, '(', ')') &&
-            .balancedParens(s, '{', '}') &&
-            .balancedParens(s, '[', ']');
-    }
-
     static toResult(EngineResult er)
     {
         final switch (er)
