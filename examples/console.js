@@ -36,8 +36,7 @@
 
         case 13: case 14: // Return, Enter
             this.disabled = true;
-            this.classList.remove('text-primary');
-            this.classList.add('text-muted');
+            this.style.opacity = 0.5;
             history.push(this.value);
             histIdx = history.length;
             try {
@@ -83,7 +82,7 @@
         switch (resp.result)
         {
         case 'incomplete': prompt = '&nbsp;|&nbsp;'; break;
-        case 'success': writeln('success', resp.text); break;
+        case 'success': writeln('success', "=> "+resp.text); break;
         case 'error': writeln('danger', resp.text); break;
         }
         readline(prompt);
