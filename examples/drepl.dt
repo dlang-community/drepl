@@ -2,7 +2,7 @@
 html
   head
     title D REPL
-    link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css')
+    style !{import("style.min.css")}
   :css
     #terminal {
       font-family: monospace;
@@ -26,105 +26,4 @@ html
           small Try to type an expression, a statement or a declaration.
         .panel-body
           #terminal.panel-body
-  :javascript
-    (function () {
-        var terminal = document.getElementById('terminal');
-
-        var history = [];
-        try {
-            history = JSON.parse(localStorage["history"]);
-        } catch (err) {
-        }
-        var histIdx = history.length;
-        var histCurLine;
-
-        var ws_url = location.protocol.replace('http', 'ws')+'//'+location.hostname+
-            (location.port ? ':'+location.port: '')+'/ws/dmd';
-        var conn = new WebSocket(ws_url);
-
-        function handleKeyDown(e) {
-            e = e || window.event;
-            switch (e.keyCode || e.which)
-            {
-            case 38: // up
-                if (histIdx == history.length)
-                    histCurLine = this.value;
-                if (histIdx > 0)
-                    this.value = history[--histIdx];
-                break;
-
-            case 40: // down
-                if (histIdx < history.length)
-                {
-                    if (++histIdx == history.length)
-                        this.value = histCurLine;
-                    else
-                        this.value = history[histIdx];
-                }
-                break;
-
-            case 13: case 14: // Return, Enter
-                this.disabled = true;
-                this.classList.remove('text-primary');
-                this.classList.add('text-muted');
-                history.push(this.value);
-                histIdx = history.length;
-                try {
-                    var tosave = history.slice(Math.max(0, history.length - 100));
-                    localStorage["history"] = JSON.stringify(tosave);
-                } catch (err) {
-                }
-                conn.send(this.value);
-                break;
-
-            default:
-                return;
-            }
-            e.preventDefault ? e.preventDefault() : e.returnValue = false;
-        }
-
-        function readline(prompt) {
-            var line = document.createElement('div');
-            line.classList.add('line');
-            line.innerHTML =
-                '<span class="text-info">'+prompt+'</span>'+
-                '<input type="text" class="text-info" size="80">';
-            var inp = line.lastChild;
-
-            inp.onkeydown = handleKeyDown;
-            terminal.appendChild(line);
-            terminal.onclick = function () { inp.focus(); };
-            inp.focus();
-        }
-
-        function writeln(type, line) {
-            var respLn = document.createElement('div');
-            respLn.innerHTML = '<span class="text-'+type+'">'+line+'</span>';
-            terminal.appendChild(respLn);
-        }
-
-        conn.onopen = function (e) {
-            readline('D> ');
-        }
-
-        conn.onmessage = function (e) {
-            var resp = JSON.parse(e.data), prompt = 'D>&nbsp;';
-            switch (resp.result)
-            {
-            case 'incomplete': prompt = '&nbsp;|&nbsp;'; break;
-            case 'success': writeln('success', resp.text); break;
-            case 'error': writeln('danger', resp.text); break;
-            }
-            readline(prompt);
-        };
-
-        var _hasErr = false;
-
-        conn.onerror = function (e) {
-            writeln('danger', 'A WebSocket error occured \''+e.data+'\'.');
-        };
-
-        conn.onclose = function (ce) {
-            writeln('warning', 'Lost the connection to the server.');
-        };
-    })();
+  script!= import("console.min.js")

@@ -12,7 +12,6 @@ shared static this()
     auto router = new URLRouter;
     router
         .get("/", &drepl)
-        .get("*", serveStaticFiles("./public/"))
         .get("/ws/dmd", handleWebSockets(&runSession))
         ;
 
