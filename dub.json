@@ -5,6 +5,14 @@
     "license": "MIT",
     "authors": ["dawg"],
     "lflags-linux-dmd": ["-l:libphobos2.so", "-ldl"],
+    "buildTypes": {
+        "plain": {
+            "buildOptions": ["releaseMode"],
+        },
+        "debug": {
+            "buildOptions": ["debugInfo", "releaseMode"],
+        }
+    },
     "configurations": [
         {
             "name": "library",
