@@ -28,6 +28,12 @@
             "targetType": "executable",
             "stringImportPaths": ["examples"],
             "sourceFiles": ["examples/server.d"],
+        },
+        {
+            "name": "sandbox",
+            "targetName": "drepl_sandbox",
+            "targetType": "executable",
+            "sourceFiles": ["examples/sandbox.d"],
         }
     ],
     "dependencies": {

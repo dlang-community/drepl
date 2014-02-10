@@ -1,5 +1,4 @@
-import vibe.d;
-import dawg.drepl;
+import vibe.d, std.algorithm;
 
 shared static this()
 {
@@ -14,8 +13,7 @@ shared static this()
     router
         .get("/", &drepl)
         .get("*", serveStaticFiles("./public/"))
-        .get("/ws/echo", handleWebSockets(s => runSession(s, echoEngine())))
-        .get("/ws/dmd", handleWebSockets(s => runSession(s, dmdEngine())))
+        .get("/ws/dmd", handleWebSockets(&runSession))
         ;
 
     logInfo("serving");
@@ -27,18 +25,20 @@ void drepl(HTTPServerRequest req, HTTPServerResponse res)
     res.render!"drepl.dt"();
 }
 
-void runSession(E)(WebSocket sock, E engine)
+void runSession(WebSocket sock)
 {
-    import std.conv : to;
-    auto intp = interpreter(engine);
+    import std.process;
+    auto p = pipeShell("sandbox -M ./drepl_sandbox");
     auto resp = Json.emptyObject;
     while (sock.connected)
     {
         auto msg = sock.receiveText();
-        auto res = intp.interpret(msg);
+        p.stdin.writeln(msg); p.stdin.flush();
+        auto res = p.stdout.readln().findSplit(",");
+        assert(res[1] == ",");
 
-        resp.result = to!string(res[0]);
-        resp.text = res[1].htmlEscape();
+        resp.result = res[0];
+        resp.text = res[2].htmlEscape();
         sock.send((scope stream) => writeJsonString(stream, resp));
     }
 }
