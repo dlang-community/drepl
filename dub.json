@@ -1,0 +1,35 @@
+{
+    "name": "drepl",
+    "description": "A D interpreter.",
+    "copyright": "Copyright © 2014, dawg",
+    "license": "MIT",
+    "authors": ["dawg"],
+    "lflags-linux-dmd": ["-l:libphobos2.so", "-ldl"],
+    "configurations": [
+        {
+            "name": "library",
+            "targetType": "library",
+        },
+        {
+            "name": "console",
+            "targetName": "drepl_console",
+            "dependencies": {
+                "linenoise": "~master"
+            },
+            "targetType": "executable",
+            "sourceFiles": ["examples/console.d"],
+        },
+        {
+            "name": "server",
+            "targetName": "drepl_server",
+            "dependencies": {
+                "vibe-d": ">=0.7.18"
+            },
+            "targetType": "executable",
+            "sourcePaths": ["examples/server.d"],
+        }
+    ],
+    "dependencies": {
+        "dscanner": "~master",
+    },
+}
