@@ -3,8 +3,6 @@ import vibe.d, std.algorithm, std.range;
 shared static this()
 {
     auto settings = new HTTPServerSettings;
-    settings.port = 8080;
-    settings.bindAddresses = ["::1", "127.0.0.1"];
     if (getOption("bindAddress|bind", &settings.bindAddresses[0], "Sets the address used for serving."))
         settings.bindAddresses.length = 1;
     getOption("port|p", &settings.port, "Sets the port used for serving.");
@@ -15,7 +13,6 @@ shared static this()
         .get("/ws/dmd", handleWebSockets(&runSession))
         ;
 
-    logInfo("serving");
     listenHTTP(settings, router);
 }
 
