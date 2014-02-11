@@ -18,43 +18,44 @@ struct Interpreter(Engine) if (isEngine!Engine)
 {
     Tuple!(Result, string) interpret(in char[] line)
     {
-        _incomplete ~= line;
-        _incomplete ~= '\n';
-        if (_incomplete.data.endsWith("\n\n\n"))
+        // ignore empty lines on empty input
+        if (!_incomplete.data.length && !line.length)
+            return tuple(Result.success, "");
+
+        _incomplete.put(line);
+        _incomplete.put('\n');
+        auto input = _incomplete.data;
+
+        // dismiss buffer after two consecutive empty lines
+        if (input.endsWith("\n\n\n"))
         {
             _incomplete.clear();
             return tuple(Result.error, "You typed two blank lines. Starting a new command.");
         }
-        else if (line.empty)
-        {
-            return tuple(Result.incomplete, "");
-        }
-        else
-        {
-            auto input = _incomplete.data;
 
-            immutable kind = classify(input);
-            Tuple!(EngineResult, string) res;
-            final switch (kind)
-            {
-            case Kind.Decl:
-                res = _engine.evalDecl(input);
-                break;
-            case Kind.Stmt:
-                res = _engine.evalStmt(input);
-                break;
-            case Kind.Expr:
-                res = _engine.evalExpr(input);
-                break;
-            case Kind.Incomplete:
-                return tuple(Result.incomplete, "");
-            case Kind.Error:
-                _incomplete.clear();
-                return tuple(Result.error, "Error parsing '"~input.strip.idup~"'.");
-            }
+        immutable kind = classify(input);
+        Tuple!(EngineResult, string) res;
+        final switch (kind)
+        {
+        case Kind.Decl:
+            res = _engine.evalDecl(input);
+            break;
+        case Kind.Stmt:
+            res = _engine.evalStmt(input);
+            break;
+        case Kind.Expr:
+            res = _engine.evalExpr(input);
+            break;
+
+        case Kind.Incomplete:
+            return tuple(Result.incomplete, "");
+
+        case Kind.Error:
             _incomplete.clear();
-            return tuple(toResult(res[0]), res[1]);
+            return tuple(Result.error, "Error parsing '"~input.strip.idup~"'.");
         }
+        _incomplete.clear();
+        return tuple(toResult(res[0]), res[1]);
     }
 
 private:
@@ -106,7 +107,6 @@ private:
 
     Engine _engine;
     Appender!(const(char)[]) _incomplete;
-    int _nested;
 }
 
 Interpreter!Engine interpreter(Engine)(auto ref Engine e) if (isEngine!Engine)

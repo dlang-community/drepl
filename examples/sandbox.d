@@ -6,9 +6,11 @@ void main()
     foreach (line; stdin.byLine())
     {
         auto res = intp.interpret(line);
+        writeln("===SOC===");
         writeln(res[0]);
-        writeln(res[1].strip());
-        writeln();
+        res[1] = res[1].strip();
+        if (res[1].length) writeln(res[1]);
+        writeln("===EOC===");
         stdout.flush();
     }
 }

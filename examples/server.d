@@ -1,4 +1,4 @@
-import vibe.d, std.algorithm;
+import vibe.d, std.algorithm, std.range;
 
 shared static this()
 {
@@ -33,12 +33,11 @@ void runSession(WebSocket sock)
         auto msg = sock.receiveText();
         p.stdin.writeln(msg); p.stdin.flush();
 
-        auto resp = Json.emptyArray;
-        foreach (line; p.stdout.byLine())
-        {
-            if (!line.length) break;
-            resp ~= line.htmlEscape();
-        }
+        // TODO: use non-blocking TCP sockets
+        auto resp = Json(
+            p.stdout.byLine()
+            .find("===SOC===").drop(1).until("===EOC===")
+            .map!htmlEscape.map!Json.array());
 
         sock.send((scope stream) => writeJsonString(stream, resp));
     }
