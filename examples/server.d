@@ -28,16 +28,18 @@ void runSession(WebSocket sock)
 {
     import std.process;
     auto p = pipeShell("sandbox -M ./drepl_sandbox");
-    auto resp = Json.emptyObject;
     while (sock.connected)
     {
         auto msg = sock.receiveText();
         p.stdin.writeln(msg); p.stdin.flush();
-        auto res = p.stdout.readln().findSplit(",");
-        assert(res[1] == ",");
 
-        resp.result = res[0];
-        resp.text = res[2].htmlEscape();
+        auto resp = Json.emptyArray;
+        foreach (line; p.stdout.byLine())
+        {
+            if (!line.length) break;
+            resp ~= line.htmlEscape();
+        }
+
         sock.send((scope stream) => writeJsonString(stream, resp));
     }
 }

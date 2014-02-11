@@ -1,4 +1,4 @@
-import dawg.drepl, std.stdio, std.conv : to;
+import dawg.drepl, std.stdio, std.string, std.conv;
 
 void main()
 {
@@ -6,6 +6,9 @@ void main()
     foreach (line; stdin.byLine())
     {
         auto res = intp.interpret(line);
-        writeln(res[0], ",", res[1]); stdout.flush();
+        writeln(res[0]);
+        writeln(res[1].strip());
+        writeln();
+        stdout.flush();
     }
 }
