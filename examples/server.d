@@ -1,4 +1,5 @@
-import vibe.d, std.algorithm, std.range;
+import vibe.d, std.algorithm, std.datetime, std.exception, std.range;
+import core.stdc.errno, core.sys.posix.fcntl, core.sys.posix.unistd, core.sys.posix.signal : SIGKILL;
 
 shared static this()
 {
@@ -26,17 +27,46 @@ void runSession(WebSocket sock)
     import std.process;
     // TODO: should use app path, not ./ for the sandbox binary
     auto p = pipeShell("sandbox -M ./drepl_sandbox");
+    fcntl(p.stdout.fileno, F_SETFL, O_NONBLOCK);
+    Appender!(char[]) buf;
     while (sock.connected)
     {
         auto msg = sock.receiveText();
         p.stdin.writeln(msg); p.stdin.flush();
 
         // TODO: use non-blocking TCP sockets
-        auto resp = Json(
-            p.stdout.byLine()
-            .find("===SOC===").drop(1).until("===EOC===")
-            .map!htmlEscape.map!Json.array());
+        immutable t0 = Clock.currTime();
+        while (true)
+        {
+            if (Clock.currTime() - t0 >= 5.seconds)
+            {
+                auto resp = Json(
+                    ["error", "Command '"~msg~"' timed out, killing process."].map!Json.array());
+                sock.send((scope stream) => writeJsonString(stream, resp));
+                p.pid.kill(SIGKILL);
+                return;
+            }
 
-        sock.send((scope stream) => writeJsonString(stream, resp));
+            char[1024] smBuf = void;
+            auto res = read(p.stdout.fileno, &smBuf[0], smBuf.length);
+            if (res < 0)
+            {
+                errnoEnforce(errno == EAGAIN);
+                yield();
+                continue;
+            }
+
+            buf.put(smBuf[0 .. res]);
+            if (res < smBuf.length)
+            {
+                auto resp = Json(
+                    buf.data.splitter('\n')
+                    .find("===SOC===").drop(1).until("===EOC===")
+                    .map!htmlEscape.map!Json.array());
+                sock.send((scope stream) => writeJsonString(stream, resp));
+                buf.clear();
+                break;
+            }
+        }
     }
 }
