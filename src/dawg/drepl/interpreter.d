@@ -73,6 +73,7 @@ private:
             !tokenIds.balancedParens(tok!"[", tok!"]"))
             return Kind.Incomplete;
 
+        import std.typetuple : TypeTuple;
         foreach (kind; TypeTuple!(Kind.Decl, Kind.Stmt, Kind.Expr))
             if (parse!kind(tokens))
                 return kind;
