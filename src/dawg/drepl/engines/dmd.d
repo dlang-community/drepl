@@ -46,7 +46,7 @@ DMDEngine dmdEngine()
 
 struct DMDEngine
 {
-    ProcessPipes _compiler;
+    string _compiler;
     string _tmpDir;
     size_t _id;
 
@@ -54,6 +54,7 @@ struct DMDEngine
 
     this(string compiler, string tmpDir)
     {
+        _compiler = compiler;
         _tmpDir = tmpDir;
         if (_tmpDir.exists) rmdirRecurse(_tmpDir);
         mkdirRecurse(_tmpDir);
@@ -187,7 +188,7 @@ private:
     string compileModule(string path)
     {
         import std.regex;
-        auto args = ["dmd", "-I"~_tmpDir, "-of"~path~".so", "-fPIC",
+        auto args = [_compiler, "-I"~_tmpDir, "-of"~path~".so", "-fPIC",
                      "-shared", path, "-L-l:libphobos2.so"];
         foreach (i; 0 .. _id)
             args ~= "-L"~_tmpDir~format("/_mod%s.so", i);
