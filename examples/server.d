@@ -24,9 +24,9 @@ void drepl(HTTPServerRequest req, HTTPServerResponse res)
 
 void runSession(WebSocket sock)
 {
-    import std.process;
-    // TODO: should use app path, not ./ for the sandbox binary
-    auto p = pipeShell("sandbox -M ./drepl_sandbox");
+    import std.process, core.runtime : Runtime;
+    auto sandbox = Runtime.args[0].replace("drepl_server", "drepl_sandbox");
+    auto p = pipeProcess(["sandbox", "-M", sandbox]);
     fcntl(p.stdout.fileno, F_SETFL, O_NONBLOCK);
     Appender!(char[]) buf;
     while (sock.connected)
