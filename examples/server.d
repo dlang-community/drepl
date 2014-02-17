@@ -26,8 +26,7 @@ void runSession(WebSocket sock)
 {
     import std.process, core.runtime : Runtime;
     auto sandbox = Runtime.args[0].replace("drepl_server", "drepl_sandbox");
-    //auto p = pipeProcess(["sandbox", "-M", sandbox]);
-    auto p = pipeProcess([sandbox]);
+    auto p = pipeProcess(["sandbox", "-M", sandbox]);
     fcntl(p.stdout.fileno, F_SETFL, O_NONBLOCK);
     Appender!(char[]) buf;
     while (sock.connected)
