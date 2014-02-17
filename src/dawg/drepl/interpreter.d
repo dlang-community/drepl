@@ -16,8 +16,11 @@ enum Result
 
 struct Interpreter(Engine) if (isEngine!Engine)
 {
-    Tuple!(Result, string) interpret(in char[] line)
+    Tuple!(Result, string) interpret(const(char)[] line)
     {
+        // quickfix, skip comments
+        if (byToken(cast(ubyte[])line).empty)
+            line = null;
         // ignore empty lines on empty input
         if (!_incomplete.data.length && !line.length)
             return tuple(Result.success, "");
@@ -199,4 +202,11 @@ unittest
     assert(intp.interpret("struct Foo {")[0] == Result.incomplete);
     assert(intp.interpret("")[0] == Result.incomplete);
     assert(intp.interpret("}")[0] == Result.success);
+}
+
+unittest
+{
+    auto intp = interpreter(echoEngine());
+    assert(intp.interpret("//comment")[0] == Result.success);
+    assert(intp.interpret("//comment")[0] == Result.success);
 }
