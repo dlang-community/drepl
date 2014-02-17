@@ -19,11 +19,8 @@ struct Interpreter(Engine) if (isEngine!Engine)
     alias IR = InterpreterResult;
     IR interpret(const(char)[] line)
     {
-        // quickfix, skip comments
-        if (byToken(cast(ubyte[])line).empty)
-            line = null;
-        // ignore empty lines on empty input
-        if (!_incomplete.data.length && !line.length)
+        // ignore empty lines or comment without incomplete input
+        if (!_incomplete.data.length && (!line.length || byToken(cast(ubyte[])line).empty))
             return IR(IR.State.success);
 
         _incomplete.put(line);
@@ -206,4 +203,12 @@ unittest
     auto intp = interpreter(echoEngine());
     assert(intp.interpret("//comment").state == IR.State.success);
     assert(intp.interpret("//comment").state == IR.State.success);
+
+    assert(intp.interpret("struct Foo {").state == IR.State.incomplete);
+    assert(intp.interpret("//comment").state == IR.State.incomplete);
+    assert(intp.interpret("//comment").state == IR.State.incomplete);
+    assert(intp.interpret("").state == IR.State.incomplete);
+    assert(intp.interpret("//comment").state == IR.State.incomplete);
+    assert(intp.interpret("").state == IR.State.incomplete);
+    assert(intp.interpret("").state == IR.State.error);
 }
