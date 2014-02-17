@@ -55,6 +55,7 @@ struct DMDEngine
     this(string compiler, string tmpDir)
     {
         _tmpDir = tmpDir;
+        sout = stdout;
         if (_tmpDir.exists) rmdirRecurse(_tmpDir);
         mkdirRecurse(_tmpDir);
         buildMod0();
@@ -108,8 +109,14 @@ struct DMDEngine
         ++_id;
 
         auto func = cast(string function())loadFunc(m.path, "_expr");
+
+        redirectStdout(); scope(failure) restoreStdout();
+
         try
-            return success(func());
+        {
+            auto res = func();
+            return success(restoreStdout() ~ res);
+        }
         catch (Exception e)
             return error(e.msg);
     }
@@ -131,21 +138,48 @@ struct DMDEngine
         ++_id;
 
         auto func = cast(void function())loadFunc(m.path, "_run");
+
+        redirectStdout(); scope(failure) restoreStdout();
+
         try
-            return func(), success("");
+            return func(), success(restoreStdout());
         catch (Exception e)
             return error(e.msg);
     }
 
 private:
+
+    File sout;
+
+    void redirectStdout()
+    {
+        stdout = File(_tmpDir ~ "/_sout", "w");
+    }
+
+    string restoreStdout()
+    {
+        import std.file : readText;
+
+        stdout.close();
+        stdout = sout;
+        return readText(_tmpDir ~ "/_sout");
+    }
+
+
     void buildMod0()
     {
         auto mod = newModule();
         mod.f.writeln(q{
-                string _toString(T)(auto ref T t)
+                string _toString(E)(lazy E expr)
                 {
                     import std.conv : to;
-                    return to!string(t);
+                    static if (__traits(compiles, is(typeof(expr()))) && !is(typeof(expr()) == void))
+                    {
+                        auto temp = expr();
+                        return temp.to!string;
+                    }
+                    expr();
+                    return "";
                 }
 
                 string _toString(Args...)(auto ref Args args) if (Args.length > 1)
