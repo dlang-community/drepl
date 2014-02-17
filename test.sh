@@ -23,6 +23,7 @@ export LD_LIBRARY_PATH=${TEMPDIR}/phobos/generated/linux/release/64
 curl -L http://code.dlang.org/files/dub-0.9.21-rc.4-linux-x86_64.tar.gz > ${TEMPDIR}/dub.tar.gz
 tar -C ${TEMPDIR} -zxf ${TEMPDIR}/dub.tar.gz
 
+export DMD=${TEMPDIR}/dmd/src/dmd
 ${TEMPDIR}/dub test --compiler=${TEMPDIR}/dmd/src/dmd
 
 rm -rf ${TEMPDIR}
