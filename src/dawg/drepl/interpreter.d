@@ -4,8 +4,8 @@
   Authors: $(WEB code.dawg.eu, Martin Nowak)
 */
 module dawg.drepl.interpreter;
-import dawg.drepl.engines;
-import std.algorithm, std.array, std.conv, std.string, std.typecons;
+import dawg.drepl.engines, dawg.drepl.parser;
+import std.algorithm, std.array, std.conv, std.string, std.typecons, std.typetuple;
 
 enum Result
 {
@@ -14,13 +14,19 @@ enum Result
     incomplete,
 }
 
+
 struct Interpreter(Engine) if (isEngine!Engine)
 {
     Tuple!(Result, string) interpret(in char[] line)
     {
+        import std.string : chomp, stripRight;
+
         // ignore empty lines on empty input
         if (!_incomplete.data.length && !line.length)
             return tuple(Result.success, "");
+
+        // if line is empty, but _incomplete is not, force parse
+        bool forceParse = (_incomplete.data.length && !line.length);
 
         _incomplete.put(line);
         _incomplete.put('\n');
@@ -33,67 +39,48 @@ struct Interpreter(Engine) if (isEngine!Engine)
             return tuple(Result.error, "You typed two blank lines. Starting a new command.");
         }
 
-        immutable kind = classify(input);
-        Tuple!(EngineResult, string) res;
-        final switch (kind)
-        {
-        case Kind.Decl:
-            res = _engine.evalDecl(input);
-            break;
-        case Kind.Stmt:
-            res = _engine.evalStmt(input);
-            break;
-        case Kind.Expr:
-            res = _engine.evalExpr(input);
-            break;
+        auto parseResult = parse(input);
 
-        case Kind.Incomplete:
+        if (parseResult[0] && !forceParse)
             return tuple(Result.incomplete, "");
 
-        case Kind.Error:
-            _incomplete.clear();
-            return tuple(Result.error, "Error parsing '"~input.strip.idup~"'.");
-        }
         _incomplete.clear();
-        return tuple(toResult(res[0]), res[1]);
+
+        if (parseResult[0] && forceParse)
+            return tuple(Result.error, "Error parsing '"~input.strip.idup~"'.");
+
+        Tuple!(EngineResult, string)[] res;
+
+        foreach(atom; parseResult[1])
+        {
+            final switch(atom.kind) with(AtomKind)
+            {
+            case Stmt: res ~= _engine.evalStmt(atom.source); break;
+            case Decl: res ~= _engine.evalDecl(atom.source); break;
+            case Expr: res ~= _engine.evalExpr(atom.source.stripRight().chomp(";")); break;
+            case Auto: res ~= _engine.evalDecl(atom.source); break; // TODO: implement re-write
+            }
+        }
+
+        auto engResult = res.canFind!( (a,b) => a[0] == b )(EngineResult.error) ? EngineResult.error : EngineResult.success;
+        auto strResult = res.map!( a => a[1] ).join("\n").stripRight();
+
+        return tuple(toResult(engResult), strResult);
     }
 
 private:
-    enum Kind { Decl, Stmt, Expr, Incomplete, Error, }
 
     import stdx.d.lexer, stdx.d.parser;
 
-    Kind classify(in char[] input)
+    Tuple!(bool, Atom[]) parse(in char[] input)
     {
-        auto tokens = byToken(cast(ubyte[])_incomplete.data).array();
-
-        auto tokenIds = tokens.map!(t => t.type)();
-        if (!tokenIds.balancedParens(tok!"{", tok!"}") ||
-            !tokenIds.balancedParens(tok!"(", tok!")") ||
-            !tokenIds.balancedParens(tok!"[", tok!"]"))
-            return Kind.Incomplete;
-
-        foreach (kind; TypeTuple!(Kind.Decl, Kind.Stmt, Kind.Expr))
-            if (parse!kind(tokens))
-                return kind;
-        return Kind.Error;
-    }
-
-    bool parse(Kind kind)(in Token[] tokens)
-    {
-        scope parser = new Parser();
+        scope parser = new ReplParser();
         static bool hasErr;
         hasErr = false;
         parser.fileName = "drepl";
-        parser.setTokens(tokens);
         parser.messageFunction = (file, ln, col, msg, isErr) { if (isErr) hasErr = true; };
-        static if (kind == Kind.Decl)
-            if (!parser.parseDeclaration()) return false;
-        static if (kind == Kind.Stmt)
-            if (!parser.parseStatement()) return false;
-        static if (kind == Kind.Expr)
-            if (!parser.parseExpression()) return false;
-        return !hasErr && !parser.moreTokens();
+        auto atoms = parser.parse(input);
+        return tuple(hasErr, atoms);
     }
 
     static toResult(EngineResult er)
