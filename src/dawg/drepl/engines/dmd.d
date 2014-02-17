@@ -170,10 +170,16 @@ private:
     {
         auto mod = newModule();
         mod.f.writeln(q{
-                string _toString(T)(auto ref T t)
+                string _toString(E)(lazy E expr)
                 {
                     import std.conv : to;
-                    return to!string(t);
+                    static if (__traits(compiles, is(typeof(expr()))) && !is(typeof(expr()) == void))
+                    {
+                        auto temp = expr();
+                        return temp.to!string;
+                    }
+                    expr();
+                    return "";
                 }
 
                 string _toString(Args...)(auto ref Args args) if (Args.length > 1)
