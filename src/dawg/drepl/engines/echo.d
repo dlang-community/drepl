@@ -14,19 +14,19 @@ EchoEngine echoEngine()
 
 struct EchoEngine
 {
-    Tuple!(EngineResult, string) evalDecl(in char[] decl)
+    EngineResult evalDecl(in char[] decl)
     {
-        return tuple(EngineResult.success, decl.stripRight.idup);
+        return EngineResult(true, decl.stripRight.idup);
     }
 
-    Tuple!(EngineResult, string) evalExpr(in char[] expr)
+    EngineResult evalExpr(in char[] expr)
     {
-        return tuple(EngineResult.success, expr.stripRight.idup);
+        return EngineResult(true, expr.stripRight.idup);
     }
 
-    Tuple!(EngineResult, string) evalStmt(in char[] stmt)
+    EngineResult evalStmt(in char[] stmt)
     {
-        return tuple(EngineResult.success, stmt.stripRight.idup);
+        return EngineResult(true, stmt.stripRight.idup);
     }
 }
 
@@ -34,9 +34,10 @@ static assert(isEngine!EchoEngine);
 
 unittest
 {
-    static auto success(string msg) { return tuple(EngineResult.success, msg); }
+    alias ER = EngineResult;
+
     auto e = echoEngine();
-    assert(e.evalDecl("void foo() {\n}") == success("void foo() {\n}"));
-    assert(e.evalExpr("3 * foo") == success("3 * foo"));
-    assert(e.evalStmt("writeln(`foobar`);") == success("writeln(`foobar`);"));
+    assert(e.evalDecl("void foo() {\n}") == ER(true, "void foo() {\n}"));
+    assert(e.evalExpr("3 * foo") == ER(true, "3 * foo"));
+    assert(e.evalStmt("writeln(`foobar`);") == ER(true, "writeln(`foobar`);"));
 }

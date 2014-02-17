@@ -26,7 +26,8 @@ void runSession(WebSocket sock)
 {
     import std.process, core.runtime : Runtime;
     auto sandbox = Runtime.args[0].replace("drepl_server", "drepl_sandbox");
-    auto p = pipeProcess(["sandbox", "-M", sandbox]);
+    //auto p = pipeProcess(["sandbox", "-M", sandbox]);
+    auto p = pipeProcess([sandbox]);
     fcntl(p.stdout.fileno, F_SETFL, O_NONBLOCK);
     Appender!(char[]) buf;
     while (sock.connected)
@@ -40,8 +41,10 @@ void runSession(WebSocket sock)
         {
             if (Clock.currTime() - t0 >= 5.seconds)
             {
-                auto resp = Json(
-                    ["error", "Command '"~msg~"' timed out, killing process."].map!Json.array());
+                auto resp = Json.emptyObject;
+                resp.state = "error";
+                resp.stdout = Json.emptyArray;
+                resp.stderr = [Json("Command '"~msg~"' timed out, killing process.")];
                 sock.send((scope stream) => writeJsonString(stream, resp));
                 p.pid.kill(SIGKILL);
                 return;
@@ -60,10 +63,9 @@ void runSession(WebSocket sock)
             buf.put(smBuf[0 .. res]);
             if (res < smBuf.length)
             {
-                auto resp = Json(
-                    buf.data.splitter('\n')
-                    .find("===SOC===").drop(1).until("===EOC===")
-                    .map!htmlEscape.map!Json.array());
+                auto resp = parseJsonString(buf.data.idup);
+                resp.stdout = resp.stdout.get!string.splitter('\n').map!htmlEscapeMin.map!Json.array;
+                resp.stderr = resp.stderr.get!string.splitter('\n').map!htmlEscapeMin.map!Json.array;
                 sock.send((scope stream) => writeJsonString(stream, resp));
                 buf.clear();
                 break;

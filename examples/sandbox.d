@@ -1,4 +1,4 @@
-import dawg.drepl, std.stdio, std.string, std.conv;
+import dawg.drepl, std.stdio, std.string, std.conv, std.json;
 
 void main()
 {
@@ -6,11 +6,13 @@ void main()
     foreach (line; stdin.byLine())
     {
         auto res = intp.interpret(line);
-        writeln("===SOC===");
-        writeln(res[0]);
-        res[1] = res[1].strip();
-        if (res[1].length) writeln(res[1]);
-        writeln("===EOC===");
+        JSONValue json;
+        json = [
+            "state" : to!string(res.state),
+            "stdout" : res.stdout.strip(),
+            "stderr" : res.stderr.strip(),
+        ];
+        writeln(json);
         stdout.flush();
     }
 }

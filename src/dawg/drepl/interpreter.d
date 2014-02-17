@@ -7,23 +7,24 @@ module dawg.drepl.interpreter;
 import dawg.drepl.engines;
 import std.algorithm, std.array, std.conv, std.string, std.typecons;
 
-enum Result
+struct InterpreterResult
 {
-    success,
-    error,
-    incomplete,
+    enum State { success, error, incomplete };
+    State state;
+    string stdout, stderr;
 }
 
 struct Interpreter(Engine) if (isEngine!Engine)
 {
-    Tuple!(Result, string) interpret(const(char)[] line)
+    alias IR = InterpreterResult;
+    IR interpret(const(char)[] line)
     {
         // quickfix, skip comments
         if (byToken(cast(ubyte[])line).empty)
             line = null;
         // ignore empty lines on empty input
         if (!_incomplete.data.length && !line.length)
-            return tuple(Result.success, "");
+            return IR(IR.State.success);
 
         _incomplete.put(line);
         _incomplete.put('\n');
@@ -33,11 +34,11 @@ struct Interpreter(Engine) if (isEngine!Engine)
         if (input.endsWith("\n\n\n"))
         {
             _incomplete.clear();
-            return tuple(Result.error, "You typed two blank lines. Starting a new command.");
+            return IR(IR.State.error, "", "You typed two blank lines. Starting a new command.");
         }
 
         immutable kind = classify(input);
-        Tuple!(EngineResult, string) res;
+        EngineResult res;
         final switch (kind)
         {
         case Kind.Decl:
@@ -51,14 +52,14 @@ struct Interpreter(Engine) if (isEngine!Engine)
             break;
 
         case Kind.Incomplete:
-            return tuple(Result.incomplete, "");
+            return IR(IR.State.incomplete);
 
         case Kind.Error:
             _incomplete.clear();
-            return tuple(Result.error, "Error parsing '"~input.strip.idup~"'.");
+            return IR(IR.State.error, "", "Error parsing '"~input.strip.idup~"'.");
         }
         _incomplete.clear();
-        return tuple(toResult(res[0]), res[1]);
+        return IR(res.success ? IR.State.success : IR.State.error, res.stdout, res.stderr);
     }
 
 private:
@@ -131,15 +132,8 @@ private:
         assert(intp.classify("void foo() {} foo()") == Kind.Error);
         // or statments and expressions
         assert(intp.classify("foo(); foo()") == Kind.Error);
-    }
 
-    static toResult(EngineResult er)
-    {
-        final switch (er)
-        {
-        case EngineResult.success: return Result.success;
-        case EngineResult.error: return Result.error;
-        }
+        assert(intp.classify("import std.stdio;") == Kind.Decl);
     }
 
     Engine _engine;
@@ -153,18 +147,19 @@ Interpreter!Engine interpreter(Engine)(auto ref Engine e) if (isEngine!Engine)
 
 unittest
 {
+    alias IR = InterpreterResult;
     auto intp = interpreter(echoEngine());
-    assert(intp.interpret("3 * foo") == tuple(Result.success, "3 * foo"));
-    assert(intp.interpret("stmt!(T)();") == tuple(Result.success, "stmt!(T)();"));
-    assert(intp.interpret("auto a = 3 * foo;") == tuple(Result.success, "auto a = 3 * foo;"));
+    assert(intp.interpret("3 * foo") == IR(IR.State.success, "3 * foo"));
+    assert(intp.interpret("stmt!(T)();") == IR(IR.State.success, "stmt!(T)();"));
+    assert(intp.interpret("auto a = 3 * foo;") == IR(IR.State.success, "auto a = 3 * foo;"));
 
     void testMultiline(string input)
     {
         import std.string : splitLines;
         auto lines = splitLines(input);
         foreach (line; lines[0 .. $-1])
-            assert(intp.interpret(line) == tuple(Result.incomplete, ""));
-        assert(intp.interpret(lines[$-1]) == tuple(Result.success, input));
+            assert(intp.interpret(line) == IR(IR.State.incomplete, ""));
+        assert(intp.interpret(lines[$-1]) == IR(IR.State.success, input));
     }
 
     testMultiline(
@@ -194,19 +189,21 @@ unittest
 
 unittest
 {
+    alias IR = InterpreterResult;
     auto intp = interpreter(echoEngine());
-    assert(intp.interpret("struct Foo {")[0] == Result.incomplete);
-    assert(intp.interpret("")[0] == Result.incomplete);
-    assert(intp.interpret("")[0] == Result.error);
+    assert(intp.interpret("struct Foo {").state == IR.State.incomplete);
+    assert(intp.interpret("").state == IR.State.incomplete);
+    assert(intp.interpret("").state == IR.State.error);
 
-    assert(intp.interpret("struct Foo {")[0] == Result.incomplete);
-    assert(intp.interpret("")[0] == Result.incomplete);
-    assert(intp.interpret("}")[0] == Result.success);
+    assert(intp.interpret("struct Foo {").state == IR.State.incomplete);
+    assert(intp.interpret("").state == IR.State.incomplete);
+    assert(intp.interpret("}").state == IR.State.success);
 }
 
 unittest
 {
+    alias IR = InterpreterResult;
     auto intp = interpreter(echoEngine());
-    assert(intp.interpret("//comment")[0] == Result.success);
-    assert(intp.interpret("//comment")[0] == Result.success);
+    assert(intp.interpret("//comment").state == IR.State.success);
+    assert(intp.interpret("//comment").state == IR.State.success);
 }

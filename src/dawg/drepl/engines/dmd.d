@@ -58,7 +58,6 @@ struct DMDEngine
         _tmpDir = tmpDir;
         if (_tmpDir.exists) rmdirRecurse(_tmpDir);
         mkdirRecurse(_tmpDir);
-        buildMod0();
     }
 
     ~this()
@@ -66,59 +65,56 @@ struct DMDEngine
         if (_tmpDir) rmdirRecurse(_tmpDir);
     }
 
-    Tuple!(EngineResult, string) evalDecl(in char[] decl)
+    EngineResult evalDecl(in char[] decl)
     {
         auto m = newModule();
         m.f.writefln(q{
             // for public imports
             public %1$s
 
-            extern(C) string[] _decls()
+            extern(C) void _decls()
             {
-                return [__traits(allMembers, _mod%2$s)];
+                import std.algorithm, std.stdio;
+                writef("%%-(%%s, %%)", [__traits(allMembers, _mod%2$s)][1 .. $]
+                       .filter!(d => !d.startsWith("_")));
             }
             }.outdent(), decl, _id);
         m.f.close();
 
         if (auto err = compileModule(m.path))
-            return error(err);
+            return EngineResult(false, err);
 
         ++_id;
 
-        auto func = cast(string[] function())loadFunc(m.path, "_decls");
-        try
-            return success(func()[1 .. $].filter!(d => !d.startsWith("_")).join(", "));
-        catch (Exception e)
-            return error(e.toString());
+        auto func = cast(void function())loadFunc(m.path, "_decls");
+        return captureOutput(func);
     }
 
-    Tuple!(EngineResult, string) evalExpr(in char[] expr)
+    EngineResult evalExpr(in char[] expr)
     {
         auto m = newModule();
         m.f.writefln(q{
-                extern(C) string _expr()
+                extern(C) void _expr()
                 {
+                    import std.stdio;
                     static if (is(typeof((() => (%1$s))()) == void))
-                        return (%1$s), _toString("void");
+                        (%1$s), write("void");
                     else
-                        return _toString(%1$s);
+                        write(%1$s);
                 }
             }.outdent(), expr);
         m.f.close();
 
         if (auto err = compileModule(m.path))
-            return error(err);
+            return EngineResult(false, err);
 
         ++_id;
 
-        auto func = cast(string function())loadFunc(m.path, "_expr");
-        try
-            return success(func());
-        catch (Exception e)
-            return error(e.msg);
+        auto func = cast(void function())loadFunc(m.path, "_expr");
+        return captureOutput(func);
     }
 
-    Tuple!(EngineResult, string) evalStmt(in char[] stmt)
+    EngineResult evalStmt(in char[] stmt)
     {
         auto m = newModule();
         m.f.writefln(q{
@@ -130,43 +126,50 @@ struct DMDEngine
         m.f.close();
 
         if (auto err = compileModule(m.path))
-            return error(err);
+            return EngineResult(false, err);
 
         ++_id;
 
         auto func = cast(void function())loadFunc(m.path, "_run");
-        try
-            return func(), success("");
-        catch (Exception e)
-            return error(e.msg);
+        return captureOutput(func);
     }
 
 private:
-    void buildMod0()
+    EngineResult captureOutput(void function() dg)
     {
-        auto mod = newModule();
-        mod.f.writeln(q{
-                string _toString(T)(auto ref T t)
-                {
-                    import std.conv : to;
-                    return to!string(t);
-                }
+        // TODO: cleanup, error checking...
+        import core.sys.posix.fcntl, core.sys.posix.unistd, std.conv : octal;
 
-                string _toString(Args...)(auto ref Args args) if (Args.length > 1)
-                {
-                    string res = "tuple(";
-                    foreach (i, a; args)
-                    {
-                        if (i) res ~= ", ";
-                        res ~= _toString(a);
-                    }
-                    res ~= ")";
-                    return res;
-                }
-        });
-        if (auto err = compileModule(mod.path))
-            throw new Exception(err);
-        ++_id;
+        .stdout.flush();
+        .stderr.flush();
+        immutable
+            saveOut = dup(.stdout.fileno),
+            saveErr = dup(.stderr.fileno),
+            capOut = open(toStringz(_tmpDir~"/_stdout"), O_WRONLY|O_CREAT|O_TRUNC, octal!600),
+            capErr = open(toStringz(_tmpDir~"/_stderr"), O_WRONLY|O_CREAT|O_TRUNC, octal!600);
+        dup2(capOut, .stdout.fileno);
+        dup2(capErr, .stderr.fileno);
+
+        bool success = true;
+        try
+        {
+            dg();
+        }
+        catch (Exception e)
+        {
+            success = false;
+            stderr.writeln(e.toString());
+        }
+        .stdout.flush();
+        .stderr.flush();
+        close(.stdout.fileno);
+        close(.stderr.fileno);
+        dup2(saveOut, .stdout.fileno);
+        dup2(saveErr, .stderr.fileno);
+        close(saveOut);
+        close(saveErr);
+        return EngineResult(
+            success, readText(_tmpDir~"/_stdout"), readText(_tmpDir~"/_stderr"));
     }
 
     Tuple!(File, "f", string, "path") newModule()
@@ -216,16 +219,6 @@ private:
         }
         return dlsym(lib, toStringz(name));
     }
-
-    Tuple!(EngineResult, string) error(string msg)
-    {
-        return tuple(EngineResult.error, msg);
-    }
-
-    Tuple!(EngineResult, string) success(string msg)
-    {
-        return tuple(EngineResult.success, msg);
-    }
 }
 
 static assert(isEngine!DMDEngine);
@@ -233,26 +226,24 @@ static assert(isEngine!DMDEngine);
 unittest
 {
     alias ER = EngineResult;
-    static Tuple!(EngineResult, string) success(string s) { return tuple(ER.success, s); }
 
     DMDEngine dmd;
 
     dmd = dmdEngine();
-    assert(dmd.evalExpr("5+2") == success("7"));
-    assert(dmd.evalDecl("string foo() { return \"bar\"; }") == success("foo"));
-    assert(dmd.evalExpr("foo()") == success("bar"));
-    assert(dmd.evalExpr("bar()")[0] == ER.error);
+    assert(dmd.evalExpr("5+2") == ER(true, "7"));
+    assert(dmd.evalDecl("string foo() { return \"bar\"; }") == ER(true, "foo"));
+    assert(dmd.evalExpr("foo()") == ER(true, "bar"));
+    assert(!dmd.evalExpr("bar()").success);
 
-    assert(dmd.evalDecl("struct Foo { }") == success("Foo"));
-    assert(dmd.evalDecl("Foo f;") == success("f"));
-    assert(dmd.evalStmt("f = Foo();") == success(""));
-
-    dmd = dmdEngine();
-    assert(dmd.evalDecl("void foo() {}") == success("foo"));
-    assert(dmd.evalExpr("foo()") == success("void"));
+    assert(dmd.evalDecl("struct Foo { }") == ER(true, "Foo"));
+    assert(dmd.evalDecl("Foo f;") == ER(true, "f"));
+    assert(dmd.evalStmt("f = Foo();") == ER(true, ""));
 
     dmd = dmdEngine();
-    assert(dmd.evalStmt("import std.stdio;")[0] == ER.success);
-    // currently fails Issue #2
-    // assert(dmd.evalStmt("writeln(\"foo\");") == success("foo"));
+    assert(dmd.evalDecl("void foo() {}") == ER(true, "foo"));
+    assert(dmd.evalExpr("foo()") == ER(true, "void"));
+
+    dmd = dmdEngine();
+    assert(dmd.evalDecl("import std.stdio;").success);
+    assert(dmd.evalStmt("writeln(\"foo\");") == ER(true, "foo\n"));
 }

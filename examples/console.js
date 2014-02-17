@@ -79,16 +79,15 @@
 
     conn.onmessage = function (e) {
         var resp = JSON.parse(e.data), prompt = 'D>&nbsp;';
-        switch (resp[0])
+        switch (resp.state)
         {
         case 'incomplete': prompt = '&nbsp;|&nbsp;'; break;
         case 'success':
-            for (var i = 1; i < resp.length; ++i)
-                writeln('success', "=> "+resp[i]);
-            break;
         case 'error':
-            for (var i = 1; i < resp.length; ++i)
-                writeln('danger', "=> "+resp[i]);
+            for (var i = 0; i < resp.stdout.length; ++i)
+                writeln('success', "=> "+resp.stdout[i]);
+            for (var i = 0; i < resp.stderr.length; ++i)
+                writeln('danger', "=> "+resp.stderr[i]);
             break;
         }
         readline(prompt);

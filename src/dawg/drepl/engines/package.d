@@ -7,16 +7,16 @@ module dawg.drepl.engines;
 public import dawg.drepl.engines.dmd, dawg.drepl.engines.echo;
 import std.typecons;
 
-enum EngineResult
+struct EngineResult
 {
-    success,
-    error,
+    bool success;
+    string stdout, stderr;
 }
 
 template isEngine(Engine)
 {
     enum isEngine =
-        is(typeof(Engine.evalDecl("")) == Tuple!(EngineResult, string)) &&
-        is(typeof(Engine.evalExpr("")) == Tuple!(EngineResult, string)) &&
-        is(typeof(Engine.evalStmt("")) == Tuple!(EngineResult, string));
+        is(typeof(Engine.evalDecl("")) == EngineResult) &&
+        is(typeof(Engine.evalExpr("")) == EngineResult) &&
+        is(typeof(Engine.evalStmt("")) == EngineResult);
 }
