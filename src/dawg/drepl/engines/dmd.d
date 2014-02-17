@@ -226,3 +226,26 @@ private:
 }
 
 static assert(isEngine!DMDEngine);
+
+unittest
+{
+    alias ER = EngineResult;
+    static Tuple!(EngineResult, string) success(string s) { return tuple(ER.success, s); }
+
+    DMDEngine dmd;
+
+    dmd = dmdEngine();
+    assert(dmd.evalExpr("5+2") == success("7"));
+    assert(dmd.evalDecl("string foo() { return \"bar\"; }") == success("foo"));
+    assert(dmd.evalExpr("foo()") == success("bar"));
+    assert(dmd.evalExpr("bar()")[0] == ER.error);
+
+    assert(dmd.evalDecl("struct Foo { }") == success("Foo"));
+    assert(dmd.evalDecl("Foo f;") == success("f"));
+    assert(dmd.evalStmt("f = Foo();") == success(""));
+
+    dmd = dmdEngine();
+    assert(dmd.evalStmt("import std.stdio;")[0] == ER.success);
+    // currently fails Issue #2
+    // assert(dmd.evalStmt("writeln(\"foo\");") == success("foo"));
+}
