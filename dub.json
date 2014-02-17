@@ -11,6 +11,9 @@
         },
         "debug": {
             "buildOptions": ["debugInfo", "releaseMode"],
+        },
+        "unittest": {
+            "buildOptions": ["unittests", "releaseMode", "debugInfo"]
         }
     },
     "configurations": [

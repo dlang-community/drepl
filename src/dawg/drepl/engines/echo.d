@@ -5,7 +5,7 @@
 */
 module dawg.drepl.engines.echo;
 import dawg.drepl.engines;
-import std.typecons;
+import std.typecons, std.string : stripRight;
 
 EchoEngine echoEngine()
 {
@@ -16,17 +16,17 @@ struct EchoEngine
 {
     Tuple!(EngineResult, string) evalDecl(in char[] decl)
     {
-        return tuple(EngineResult.success, decl.idup);
+        return tuple(EngineResult.success, decl.stripRight.idup);
     }
 
     Tuple!(EngineResult, string) evalExpr(in char[] expr)
     {
-        return tuple(EngineResult.success, expr.idup);
+        return tuple(EngineResult.success, expr.stripRight.idup);
     }
 
     Tuple!(EngineResult, string) evalStmt(in char[] stmt)
     {
-        return tuple(EngineResult.success, stmt.idup);
+        return tuple(EngineResult.success, stmt.stripRight.idup);
     }
 }
 

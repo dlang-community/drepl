@@ -154,7 +154,10 @@ unittest
 
                 }
             }});
+}
 
+unittest
+{
     auto intp = interpreter(echoEngine());
     assert(intp.interpret("struct Foo {")[0] == Result.incomplete);
     assert(intp.interpret("")[0] == Result.incomplete);
