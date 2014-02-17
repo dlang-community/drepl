@@ -34,7 +34,7 @@
             "name": "server",
             "targetName": "drepl_server",
             "dependencies": {
-                "vibe-d": ">=0.7.18"
+                "vibe-d": "~master"
             },
             "targetType": "executable",
             "stringImportPaths": ["examples"],

@@ -22,53 +22,60 @@ void drepl(HTTPServerRequest req, HTTPServerResponse res)
     res.render!"drepl.dt"();
 }
 
+void sendError(WebSocket sock, string error)
+{
+    auto resp = Json.emptyObject;
+    resp.state = "error";
+    resp.stdout = Json.emptyArray;
+    resp.stderr = [Json(error)];
+    sock.send((scope stream) => writeJsonString(stream, resp));
+}
+
 void runSession(WebSocket sock)
 {
     import std.process, core.runtime : Runtime;
     auto sandbox = Runtime.args[0].replace("drepl_server", "drepl_sandbox");
     auto p = pipeProcess(["sandbox", "-M", sandbox]);
+    scope (exit) if (!tryWait(p.pid).terminated) p.pid.kill(SIGKILL);
     fcntl(p.stdout.fileno, F_SETFL, O_NONBLOCK);
+
+    scope readEvt = createFileDescriptorEvent(p.stdout.fileno, FileDescriptorEvent.Trigger.read);
+
     Appender!(char[]) buf;
+
     while (sock.connected)
     {
         auto msg = sock.receiveText();
-        p.stdin.writeln(msg); p.stdin.flush();
+        p.stdin.writeln(msg);
+        p.stdin.flush();
 
-        // TODO: use non-blocking TCP sockets
-        immutable t0 = Clock.currTime();
-        while (true)
+        if (!readEvt.wait(5.seconds, FileDescriptorEvent.Trigger.read))
+            return sock.sendError("Command '"~msg~"' timed out.");
+
+        auto rc = tryWait(p.pid);
+        if (rc.terminated)
+            return sock.sendError("Command '"~msg~"' terminated with "~to!string(rc.status)~".");
+
+        char[1024] smBuf = void;
+        ptrdiff_t res;
+        while ((res = read(p.stdout.fileno, &smBuf[0], smBuf.length)) == smBuf.length)
+            buf.put(smBuf[]);
+
+        if (res < 0 && errno != EAGAIN)
+            return sock.sendError("Internal error reading process output.");
+        buf.put(smBuf[0 .. max(res, 0)]);
+
+        try
         {
-            if (Clock.currTime() - t0 >= 5.seconds)
-            {
-                auto resp = Json.emptyObject;
-                resp.state = "error";
-                resp.stdout = Json.emptyArray;
-                resp.stderr = [Json("Command '"~msg~"' timed out, killing process.")];
-                sock.send((scope stream) => writeJsonString(stream, resp));
-                p.pid.kill(SIGKILL);
-                return;
-            }
-
-            char[1024] smBuf = void;
-            auto res = read(p.stdout.fileno, &smBuf[0], smBuf.length);
-            if (res < 0)
-            {
-                errnoEnforce(errno == EAGAIN);
-                // TODO: yield doesn't really seem to allow parallel sessions
-                yield();
-                continue;
-            }
-
-            buf.put(smBuf[0 .. res]);
-            if (res < smBuf.length)
-            {
-                auto resp = parseJsonString(buf.data.idup);
-                resp.stdout = resp.stdout.get!string.splitter('\n').map!htmlEscapeMin.map!Json.array;
-                resp.stderr = resp.stderr.get!string.splitter('\n').map!htmlEscapeMin.map!Json.array;
-                sock.send((scope stream) => writeJsonString(stream, resp));
-                buf.clear();
-                break;
-            }
+            auto resp = parseJsonString(buf.data.idup);
+            resp.stdout = resp.stdout.get!string.splitter('\n').map!htmlEscapeMin.map!Json.array;
+            resp.stderr = resp.stderr.get!string.splitter('\n').map!htmlEscapeMin.map!Json.array;
+            sock.send((scope stream) => writeJsonString(stream, resp));
+            buf.clear();
+        }
+        catch (Exception e)
+        {
+            return sock.sendError("Internal error reading process output.");
         }
     }
 }
