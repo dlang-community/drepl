@@ -35,8 +35,7 @@
             break;
 
         case 13: case 14: // Return, Enter
-            this.disabled = true;
-            this.style.opacity = 0.5;
+            this.readOnly = true;
             history.push(this.value);
             histIdx = history.length;
             try {
