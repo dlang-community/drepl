@@ -100,7 +100,7 @@ struct DMDEngine
                     static if (is(typeof((() => (%1$s))()) == void))
                         (%1$s), write("void");
                     else
-                        write(%1$s);
+                        write((%1$s));
                 }
             }.outdent(), expr);
         m.f.close();
@@ -242,6 +242,7 @@ unittest
     dmd = dmdEngine();
     assert(dmd.evalDecl("void foo() {}") == ER(true, "foo"));
     assert(dmd.evalExpr("foo()") == ER(true, "void"));
+    assert(dmd.evalExpr("foo(), 3") == ER(true, "3"));
 
     dmd = dmdEngine();
     assert(dmd.evalDecl("import std.stdio;").success);
