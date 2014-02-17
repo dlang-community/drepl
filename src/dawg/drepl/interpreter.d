@@ -195,4 +195,8 @@ unittest
     assert(intp.interpret("struct Foo {")[0] == Result.incomplete);
     assert(intp.interpret("")[0] == Result.incomplete);
     assert(intp.interpret("")[0] == Result.error);
+
+    assert(intp.interpret("struct Foo {")[0] == Result.incomplete);
+    assert(intp.interpret("")[0] == Result.incomplete);
+    assert(intp.interpret("}")[0] == Result.success);
 }
