@@ -52,6 +52,7 @@ void runSession(WebSocket sock)
             if (res < 0)
             {
                 errnoEnforce(errno == EAGAIN);
+                // TODO: yield doesn't really seem to allow parallel sessions
                 yield();
                 continue;
             }
