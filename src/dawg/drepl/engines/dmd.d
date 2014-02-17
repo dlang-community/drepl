@@ -82,7 +82,7 @@ struct DMDEngine
         m.f.close();
 
         if (auto err = compileModule(m.path))
-            return EngineResult(false, err);
+            return EngineResult(false, "", err);
 
         ++_id;
 
@@ -106,7 +106,7 @@ struct DMDEngine
         m.f.close();
 
         if (auto err = compileModule(m.path))
-            return EngineResult(false, err);
+            return EngineResult(false, "", err);
 
         ++_id;
 
@@ -126,7 +126,7 @@ struct DMDEngine
         m.f.close();
 
         if (auto err = compileModule(m.path))
-            return EngineResult(false, err);
+            return EngineResult(false, "", err);
 
         ++_id;
 
@@ -247,4 +247,15 @@ unittest
     dmd = dmdEngine();
     assert(dmd.evalDecl("import std.stdio;").success);
     assert(dmd.evalStmt("writeln(\"foo\");") == ER(true, "foo\n"));
+}
+
+unittest
+{
+    alias ER = EngineResult;
+    auto dmd = dmdEngine();
+    assert(dmd.evalDecl("void foo(int) {}") == ER(true, "foo"));
+    auto er = dmd.evalStmt("foo(\"foo\");");
+    assert(!er.success);
+    assert(er.stdout.empty);
+    assert(!er.stderr.empty);
 }
