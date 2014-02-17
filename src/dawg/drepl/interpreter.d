@@ -65,7 +65,7 @@ private:
 
     Kind classify(in char[] input)
     {
-        auto tokens = byToken(cast(ubyte[])_incomplete.data).array();
+        auto tokens = byToken(cast(ubyte[])input).array();
 
         auto tokenIds = tokens.map!(t => t.type)();
         if (!tokenIds.balancedParens(tok!"{", tok!"}") ||
@@ -89,12 +89,45 @@ private:
         parser.setTokens(tokens);
         parser.messageFunction = (file, ln, col, msg, isErr) { if (isErr) hasErr = true; };
         static if (kind == Kind.Decl)
-            if (!parser.parseDeclaration()) return false;
-        static if (kind == Kind.Stmt)
-            if (!parser.parseStatement()) return false;
-        static if (kind == Kind.Expr)
-            if (!parser.parseExpression()) return false;
-        return !hasErr && !parser.moreTokens();
+        {
+            do
+            {
+                if (!parser.parseDeclaration()) return false;
+            } while (parser.moreTokens());
+        }
+        else static if (kind == Kind.Stmt)
+        {
+            do
+            {
+                if (!parser.parseStatement()) return false;
+            } while (parser.moreTokens());
+        }
+        else static if (kind == Kind.Expr)
+        {
+            if (!parser.parseExpression() || parser.moreTokens())
+                return false;
+        }
+        return !hasErr;
+    }
+
+    unittest
+    {
+        auto intp = interpreter(echoEngine());
+        assert(intp.classify("3+2") == Kind.Expr);
+        // only single expressions
+        assert(intp.classify("3+2 foo()") == Kind.Error);
+        assert(intp.classify("3+2;") == Kind.Stmt);
+        // multiple statements
+        assert(intp.classify("3+2; foo();") == Kind.Stmt);
+        assert(intp.classify("struct Foo {}") == Kind.Decl);
+        // multiple declarations
+        assert(intp.classify("void foo() {} void bar() {}") == Kind.Decl);
+        // can't currently mix declarations and statements
+        assert(intp.classify("void foo() {} foo();") == Kind.Error);
+        // or declarations and expressions
+        assert(intp.classify("void foo() {} foo()") == Kind.Error);
+        // or statments and expressions
+        assert(intp.classify("foo(); foo()") == Kind.Error);
     }
 
     static toResult(EngineResult er)
