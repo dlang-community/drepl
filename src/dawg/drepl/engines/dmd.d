@@ -98,7 +98,10 @@ struct DMDEngine
         m.f.writefln(q{
                 extern(C) string _expr()
                 {
-                    return _toString(%1$s);
+                    static if (is(typeof((() => (%1$s))()) == void))
+                        return (%1$s), _toString("void");
+                    else
+                        return _toString(%1$s);
                 }
             }.outdent(), expr);
         m.f.close();
@@ -243,6 +246,10 @@ unittest
     assert(dmd.evalDecl("struct Foo { }") == success("Foo"));
     assert(dmd.evalDecl("Foo f;") == success("f"));
     assert(dmd.evalStmt("f = Foo();") == success(""));
+
+    dmd = dmdEngine();
+    assert(dmd.evalDecl("void foo() {}") == success("foo"));
+    assert(dmd.evalExpr("foo()") == success("void"));
 
     dmd = dmdEngine();
     assert(dmd.evalStmt("import std.stdio;")[0] == ER.success);
