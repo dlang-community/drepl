@@ -106,6 +106,22 @@ h3 {
   color: #5bc0de;
 }
 
+
+#terminal {
+    font-family: monospace;
+    height: 24em;
+    overflow-y: auto;
+}
+
+#terminal input {
+    border: none;
+    background: inherit;
+}
+
+#terminal input:focus {
+    outline: 0;
+}
+
 input[readonly] {
   opacity: 0.5;
 }

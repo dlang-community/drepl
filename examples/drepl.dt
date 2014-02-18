@@ -3,21 +3,6 @@ html
   head
     title D REPL
     style !{import("style.min.css")}
-  :css
-    #terminal {
-      font-family: monospace;
-      height: 24em;
-      overflow-y: auto;
-    }
-
-    #terminal input {
-      border: none;
-      background: inherit;
-    }
-
-    #terminal input:focus {
-      outline: 0;
-    }
   body
     .container
       .panel.panel-info
