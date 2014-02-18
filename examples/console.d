@@ -25,15 +25,15 @@ void main(string[] args)
         linenoiseHistorySave(history);
 
         auto res = intp.interpret(line[0 .. strlen(line)]);
-        final switch (res[0])
+        final switch (res.state) with(InterpreterResult.State)
         {
-        case Result.incomplete:
+        case incomplete:
             prompt = " | ";
             break;
 
-        case Result.success:
-        case Result.error:
-            if (res[1].length) writeln(res[1]);
+        case success:
+        case error:
+            if (res.stdout.length) writeln(res.stdout);
             prompt = "D> ";
             break;
         }
