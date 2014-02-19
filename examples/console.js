@@ -57,7 +57,8 @@
         line.classList.add('line');
         line.innerHTML =
             '<span class="text-info">'+prompt+'</span>'+
-            '<input type="text" class="text-info" size="80">';
+            '<input type="text" class="text-info" size="80" '+
+                'autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />';
         var inp = line.lastChild;
 
         inp.onkeydown = handleKeyDown;
