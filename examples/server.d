@@ -45,7 +45,12 @@ void runSession(WebSocket sock)
 
     while (sock.connected)
     {
-        auto msg = sock.receiveText();
+        string msg;
+        try
+            msg = sock.receiveText(true);
+        catch (Exception e)
+            return sock.sendError("Received invalid WebSocket message.");
+
         p.stdin.writeln(msg);
         p.stdin.flush();
 
