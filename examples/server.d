@@ -1,5 +1,5 @@
 import vibe.d, std.algorithm, std.datetime, std.exception, std.range;
-import core.stdc.errno, core.sys.posix.fcntl, core.sys.posix.unistd, core.sys.posix.signal : SIGKILL;
+import core.stdc.errno, core.sys.posix.fcntl, core.sys.posix.unistd, core.sys.posix.signal : SIGINT, SIGKILL;
 
 shared static this()
 {
@@ -47,14 +47,15 @@ void runSession(WebSocket sock)
     import std.process, core.runtime : Runtime;
     auto sandbox = Runtime.args[0].replace("drepl_server", "drepl_sandbox");
     auto p = pipeProcess(["sandbox", "-M", sandbox]);
-    scope (exit) if (!tryWait(p.pid).terminated) p.pid.kill(SIGKILL);
+    scope (success) if (!tryWait(p.pid).terminated) p.pid.kill(SIGINT);
+    scope (failure) if (!tryWait(p.pid).terminated) p.pid.kill(SIGKILL);
     fcntl(p.stdout.fileno, F_SETFL, O_NONBLOCK);
 
     scope readEvt = createFileDescriptorEvent(p.stdout.fileno, FileDescriptorEvent.Trigger.read);
 
     Appender!(char[]) buf;
 
-    while (sock.connected)
+    while (sock.waitForData())
     {
         string msg;
         try
