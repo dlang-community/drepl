@@ -55,7 +55,7 @@ void runSession(WebSocket sock)
 
     Appender!(char[]) buf;
 
-    while (sock.waitForData())
+    while (sock.waitForData(5.minutes))
     {
         string msg;
         try
@@ -95,4 +95,7 @@ void runSession(WebSocket sock)
             return sock.sendError("Internal error reading process output.");
         }
     }
+
+    if (sock.connected)
+        return sock.sendError("Connection closed due to inactivity (5 minutes).");
 }
