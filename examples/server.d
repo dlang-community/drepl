@@ -15,6 +15,17 @@ shared static this()
         ;
 
     listenHTTP(settings, router);
+
+    bool ssl;
+    if (getOption("ssl", &ssl, "Enable SSL encryption."))
+    {
+        auto sslSettings = new HTTPServerSettings;
+        sslSettings.bindAddresses = sslSettings.bindAddresses;
+        sslSettings.sslContext = new SSLContext("ssl/crt.pem", "ssl/key.pem", SSLVersion.tls1);
+        sslSettings.port = 443;
+        getOption("ssl-port", &sslSettings.port, "Sets the port used for serving.");
+        listenHTTP(sslSettings, router);
+    }
 }
 
 void drepl(HTTPServerRequest req, HTTPServerResponse res)

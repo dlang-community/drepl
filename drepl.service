@@ -6,7 +6,7 @@ After=network.target remote-fs.target nss-lookup.target
 Type=simple
 Group=dawg
 User=dawg
-ExecStart=/usr/bin/runcon -u unconfined_u -r unconfined_r -t unconfined_t -l s0-s0:c0.c1023 /home/dawg/drepl/drepl_server -v
+ExecStart=/usr/bin/runcon -u unconfined_u -r unconfined_r -t unconfined_t -l s0-s0:c0.c1023 /home/dawg/drepl/drepl_server --ssl -v
 WorkingDirectory=/home/dawg/drepl
 Restart=on-failure
 
