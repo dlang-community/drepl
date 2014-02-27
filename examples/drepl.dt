@@ -2,6 +2,7 @@
 html
   head
     title D REPL
+    link(rel='shortcut icon', href='/favicon.ico')
     style!= import("style.min.css")
   body
     .container

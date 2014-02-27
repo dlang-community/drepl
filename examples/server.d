@@ -11,6 +11,7 @@ shared static this()
     auto router = new URLRouter;
     router
         .get("/", &drepl)
+        .get("/favicon.ico", serveStaticFiles("."))
         .get("/ws/dmd", handleWebSockets(&runSession))
         ;
 
