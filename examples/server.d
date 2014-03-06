@@ -71,8 +71,7 @@ void runSession(WebSocket sock)
     import std.process, core.runtime : Runtime;
     auto sandbox = Runtime.args[0].replace("drepl_server", "drepl_sandbox");
     auto p = pipeProcess(["sandbox", "-M", sandbox]);
-    scope (success) if (!tryWait(p.pid).terminated) p.pid.kill(SIGINT);
-    scope (failure) if (!tryWait(p.pid).terminated) p.pid.kill(SIGKILL);
+    scope (exit) if (!tryWait(p.pid).terminated) p.pid.kill(SIGINT);
     fcntl(p.stdout.fileno, F_SETFL, O_NONBLOCK);
 
     scope readEvt = createFileDescriptorEvent(p.stdout.fileno, FileDescriptorEvent.Trigger.read);
