@@ -3,10 +3,15 @@ import core.stdc.errno, core.sys.posix.fcntl, core.sys.posix.unistd, core.sys.po
 
 shared static this()
 {
-    auto settings = new HTTPServerSettings;
-    if (getOption("bindAddress|bind", &settings.bindAddresses[0], "Sets the address used for serving."))
-        settings.bindAddresses.length = 1;
-    getOption("port|p", &settings.port, "Sets the port used for serving.");
+    string bindAddress = "127.0.0.1";
+    getOption("bindAddress|bind", &bindAddress, "Bound network address");
+    string sslCert;
+    ushort httpPort = 8080, httpsPort = 443;
+    if (getOption("ssl-cert", &sslCert, "Path to SSL certificate."))
+        httpPort = 0;
+    if (getOption("https-port", &httpsPort, "HTTPS Port (default: 443)"))
+        enforce(!sslCert.empty, "Need a SSL certificate for HTTPS.");
+    getOption("http-port", &httpPort, "HTTP Port (default: 80)");
 
     auto router = new URLRouter;
     router
@@ -15,17 +20,35 @@ shared static this()
         .get("/ws/dmd", handleWebSockets(&runSession))
         ;
 
-    listenHTTP(settings, router);
-
-    bool ssl;
-    if (getOption("ssl", &ssl, "Enable SSL encryption."))
+    if (sslCert.empty)
     {
-        auto sslSettings = new HTTPServerSettings;
-        sslSettings.bindAddresses = sslSettings.bindAddresses;
-        sslSettings.sslContext = new SSLContext("ssl/crt.pem", "ssl/key.pem", SSLVersion.tls1);
-        sslSettings.port = 443;
-        getOption("ssl-port", &sslSettings.port, "Sets the port used for serving.");
-        listenHTTP(sslSettings, router);
+        auto settings = new HTTPServerSettings;
+        settings.bindAddresses = [bindAddress];
+        settings.port = httpPort;
+
+        listenHTTP(settings, router);
+    }
+    else
+    {
+        auto https = new HTTPServerSettings;
+        https.bindAddresses = [bindAddress];
+        https.port = httpsPort;
+        https.sslContext = new SSLContext(sslCert, sslCert, SSLVersion.tls1);
+
+        listenHTTP(https, router);
+
+        if (httpPort != 0)
+        {
+            auto fwd = new HTTPServerSettings;
+            fwd.bindAddresses = https.bindAddresses;
+            fwd.port = httpPort;
+            listenHTTP(fwd, (req, res) {
+                    auto url = req.fullURL();
+                    url.schema = "https";
+                    url.port = httpsPort;
+                    res.redirect(url);
+                });
+        }
     }
 }
 
