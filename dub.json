@@ -43,6 +43,7 @@
                 "[[ examples/style.min.css -nt examples/style.css ]] || yuglify examples/style.css",
                 "[[ examples/console.min.js -nt examples/console.js ]] || yuglify examples/console.js"
             ],
+            "lflags-linux-dmd": ["-lselinux"],
         },
         {
             "name": "sandbox",
