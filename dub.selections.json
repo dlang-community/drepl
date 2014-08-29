@@ -1,0 +1,11 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"libdparse": "~master",
+		"vibe-d": "~master",
+		"libevent": "~master",
+		"openssl": "~master",
+		"libev": "~master",
+		"linenoise": "~master"
+	}
+}
