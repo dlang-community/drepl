@@ -5,10 +5,12 @@ shared static this()
 {
     string bindAddress = "127.0.0.1";
     getOption("bindAddress|bind", &bindAddress, "Bound network address");
-    string sslCert;
+    string sslCert, sslKey;
     ushort httpPort = 8080, httpsPort = 443;
-    if (getOption("ssl-cert", &sslCert, "Path to SSL certificate."))
+    if (readOption("ssl-cert", &sslCert, "Path to SSL certificate."))
         httpPort = 0;
+    readOption("ssl-key", &sslKey, "Path to SSL key.");
+    enforce(sslCert.empty == sslKey.empty, "Must provide both SSL key and SSL certificate.");
     if (getOption("https-port", &httpsPort, "HTTPS Port (default: 443)"))
         enforce(!sslCert.empty, "Need a SSL certificate for HTTPS.");
     getOption("http-port", &httpPort, "HTTP Port (default: 80)");
@@ -35,7 +37,7 @@ shared static this()
         https.port = httpsPort;
         https.sslContext = createSSLContext(SSLContextKind.server, SSLVersion.tls1);
         https.sslContext.useCertificateChainFile(sslCert);
-        https.sslContext.usePrivateKeyFile(sslCert);
+        https.sslContext.usePrivateKeyFile(sslKey);
 
         listenHTTP(https, router);
 

@@ -7,7 +7,9 @@ Type=simple
 Group=dawg
 User=dawg
 ExecStart=/usr/bin/runcon -u unconfined_u -r unconfined_r -t unconfined_t -l s0-s0:c0.c1023 \
-    /home/dawg/drepl/drepl_server --ssl-cert=ssl/crt.pem --http-port=80 --https-port=443 -v
+    /home/dawg/drepl/drepl_server --http-port=80 --https-port=443 -v \
+    --ssl-key=/etc/pki/tls/private/drepl.dawg.eu.key.pem \
+    --ssl-cert=/etc/pki/tls/private/drepl.dawg.eu.crt.pem
 WorkingDirectory=/home/dawg/drepl
 Restart=on-failure
 
