@@ -18,39 +18,18 @@
     },
     "configurations": [
         {
-            "name": "library",
-            "targetType": "library",
-        },
-        {
             "name": "console",
-            "targetName": "drepl_console",
+            "mainSourceFile": "src/drepl.d",
             "dependencies": {
                 "linenoise": "~master"
             },
             "targetType": "executable",
-            "sourceFiles": ["examples/console.d"],
         },
         {
-            "name": "server",
-            "targetName": "drepl_server",
-            "dependencies": {
-                "vibe-d": "~master"
-            },
-            "targetType": "executable",
-            "stringImportPaths": ["examples"],
-            "sourceFiles": ["examples/server.d"],
-            "preBuildCommands": [
-                "[[ examples/style.min.css -nt examples/style.css ]] || yuglify examples/style.css",
-                "[[ examples/console.min.js -nt examples/console.js ]] || yuglify examples/console.js"
-            ],
-            "lflags-linux-dmd": ["-lselinux"],
+            "name": "library",
+            "excludedSourceFiles": ["src/drepl.d"],
+            "targetType": "library",
         },
-        {
-            "name": "sandbox",
-            "targetName": "drepl_sandbox",
-            "targetType": "executable",
-            "sourceFiles": ["examples/sandbox.d"],
-        }
     ],
     "dependencies": {
         "libdparse": {"branch": "~master", "path": "libdparse"},
