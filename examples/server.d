@@ -33,7 +33,9 @@ shared static this()
         auto https = new HTTPServerSettings;
         https.bindAddresses = [bindAddress];
         https.port = httpsPort;
-        https.sslContext = new SSLContext(sslCert, sslCert, SSLVersion.tls1);
+        https.sslContext = createSSLContext(SSLContextKind.server, SSLVersion.tls1);
+        https.sslContext.useCertificateChainFile(sslCert);
+        https.sslContext.usePrivateKeyFile(sslCert);
 
         listenHTTP(https, router);
 
@@ -66,7 +68,7 @@ void sendError(WebSocket sock, string error)
     sock.send((scope stream) => writeJsonString(stream, resp));
 }
 
-void runSession(WebSocket sock)
+void runSession(scope WebSocket sock)
 {
     import std.process, core.runtime : Runtime;
     auto sandbox = Runtime.args[0].replace("drepl_server", "drepl_sandbox");
