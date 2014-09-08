@@ -25,6 +25,7 @@ install:
 
 script:
   # run unittests for library
+  - git submodule update
   - dub test
   # test building all other configurations
   - dub build -c console

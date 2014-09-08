@@ -48,6 +48,9 @@ struct Interpreter(Engine) if (isEngine!Engine)
             res = _engine.evalExpr(input);
             break;
 
+        case Kind.WhiteSpace:
+            return IR(IR.State.success);
+
         case Kind.Incomplete:
             return IR(IR.State.incomplete);
 
@@ -60,13 +63,15 @@ struct Interpreter(Engine) if (isEngine!Engine)
     }
 
 private:
-    enum Kind { Decl, Stmt, Expr, Incomplete, Error, }
+    enum Kind { Decl, Stmt, Expr, WhiteSpace, Incomplete, Error, }
 
-    import stdx.d.lexer, stdx.d.parser;
+    import std.d.lexer, std.d.parser;
 
     Kind classify(in char[] input)
     {
-        auto tokens = byToken(cast(ubyte[])input).array();
+        scope cache = new StringCache(StringCache.defaultBucketCount);
+        auto tokens = getTokensForParser(cast(ubyte[])input, LexerConfig(), cache);
+        if (tokens.empty) return Kind.WhiteSpace;
 
         auto tokenIds = tokens.map!(t => t.type)();
         if (!tokenIds.balancedParens(tok!"{", tok!"}") ||

@@ -52,6 +52,6 @@
         }
     ],
     "dependencies": {
-        "dscanner": "~master",
+        "libdparse": {"branch": "~master", "path": "libdparse"},
     },
 }
