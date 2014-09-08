@@ -139,7 +139,7 @@ private:
     }
 
     Engine _engine;
-    Appender!(const(char)[]) _incomplete;
+    Appender!(char[]) _incomplete;
 }
 
 Interpreter!Engine interpreter(Engine)(auto ref Engine e) if (isEngine!Engine)
