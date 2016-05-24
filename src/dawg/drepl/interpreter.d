@@ -65,7 +65,7 @@ struct Interpreter(Engine) if (isEngine!Engine)
 private:
     enum Kind { Decl, Stmt, Expr, WhiteSpace, Incomplete, Error, }
 
-    import dparse.lexer, dparse.parser;
+    import dparse.lexer, dparse.parser, dparse.rollback_allocator;
 
     Kind classify(in char[] input)
     {
@@ -88,11 +88,13 @@ private:
 
     bool parse(Kind kind)(in Token[] tokens)
     {
+        import dparse.rollback_allocator : RollbackAllocator;
         scope parser = new Parser();
         static bool hasErr;
         hasErr = false;
         parser.fileName = "drepl";
         parser.setTokens(tokens);
+        parser.allocator = new RollbackAllocator();
         parser.messageFunction = (file, ln, col, msg, isErr) { if (isErr) hasErr = true; };
         static if (kind == Kind.Decl)
         {
