@@ -65,7 +65,7 @@ struct Interpreter(Engine) if (isEngine!Engine)
 private:
     enum Kind { Decl, Stmt, Expr, WhiteSpace, Incomplete, Error, }
 
-    import std.d.lexer, std.d.parser;
+    import dparse.lexer, dparse.parser;
 
     Kind classify(in char[] input)
     {
