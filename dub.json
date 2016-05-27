@@ -21,7 +21,6 @@
         },
     ],
     "dependencies": {
-        "libdparse": "~>0.7.0-alpha9",
-        "linenoise": "~master"
+        "libdparse": "~>0.7.0-alpha9"
     },
 }
