@@ -32,6 +32,6 @@
         },
     ],
     "dependencies": {
-        "libdparse": {"branch": "~master", "path": "libdparse"},
+        "libdparse": "~>0.7.0-alpha9"
     },
 }
