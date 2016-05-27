@@ -9,3 +9,8 @@ install:
   - (cd linenoise-1.0 && cc -shared -fPIC linenoise.c -o liblinenoise.so)
   - export LIBRARY_PATH="$HOME/linenoise-1.0:$LIBRARY_PATH"
   - export LD_LIBRARY_PATH="$HOME/linenoise-1.0:$LD_LIBRARY_PATH"
+
+script:
+  - dub test --compiler=$DC
+  - dub build --compiler=$DC
+  - echo 10+3 | dub --compiler=$DC | grep 13
