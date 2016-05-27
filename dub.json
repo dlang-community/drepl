@@ -5,17 +5,6 @@
     "license": "MIT",
     "authors": ["dawg"],
     "lflags-linux-dmd": ["-l:libphobos2.so", "-ldl"],
-    "buildTypes": {
-        "plain": {
-            "buildOptions": ["releaseMode"],
-        },
-        "debug": {
-            "buildOptions": ["debugInfo", "releaseMode"],
-        },
-        "unittest": {
-            "buildOptions": ["unittests", "releaseMode", "debugInfo"]
-        }
-    },
     "configurations": [
         {
             "name": "console",
