@@ -8,7 +8,7 @@
     "configurations": [
         {
             "name": "console",
-            "mainSourceFile": "src/drepl.d",
+            "mainSourceFile": "src/console.d",
             "dependencies": {
                 "linenoise": "~master"
             },
