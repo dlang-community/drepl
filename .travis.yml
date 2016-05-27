@@ -9,8 +9,3 @@ install:
   - (cd linenoise-master && cc -shared -fPIC linenoise.c -o liblinenoise.so)
   - export LIBRARY_PATH="$HOME/linenoise-master:$LIBRARY_PATH"
   - export LD_LIBRARY_PATH="$HOME/linenoise-master:$LD_LIBRARY_PATH"
-
-script:
-  # run unittests for library
-  - git submodule update
-  - dub test
