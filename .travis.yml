@@ -1,12 +1,14 @@
 language: d
 d:
   - dmd
+sudo: false
 
 install:
   # linenoise
   - curl -sSL https://github.com/antirez/linenoise/archive/master.tar.gz | tar -zxf -
   - (cd linenoise-master && cc -shared -fPIC linenoise.c -o liblinenoise.so)
-  - sudo install -t /usr/lib/x86_64-linux-gnu linenoise-master/liblinenoise.so
+  - export LIBRARY_PATH="$HOME/linenoise-master:$LIBRARY_PATH"
+  - export LD_LIBRARY_PATH="$HOME/linenoise-master:$LD_LIBRARY_PATH"
 
 script:
   # run unittests for library
