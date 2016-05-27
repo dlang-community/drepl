@@ -1,9 +1,9 @@
 {
     "name": "drepl",
     "description": "A D interpreter.",
-    "copyright": "Copyright © 2014, dawg",
-    "license": "MIT",
-    "authors": ["dawg"],
+    "copyright": "Copyright © 2014-2016, DREPL team",
+    "license": "BSL-1.0",
+    "authors": ["Martin Nowak"],
     "lflags-linux-dmd": ["-l:libphobos2.so", "-ldl"],
     "buildTypes": {
         "plain": {
