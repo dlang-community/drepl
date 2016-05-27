@@ -6,7 +6,7 @@
 import std.stdio, std.string, std.path, std.process;
 import core.stdc.string : strlen;
 import deimos.linenoise;
-import dawg.drepl;
+import drepl;
 
 void main(string[] args)
 {

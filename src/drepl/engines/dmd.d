@@ -3,8 +3,8 @@
   License: Subject to the terms of the MIT license, as written in the included LICENSE file.
   Authors: $(WEB code.dawg.eu, Martin Nowak)
 */
-module dawg.drepl.engines.dmd;
-import dawg.drepl.engines;
+module drepl.engines.dmd;
+import drepl.engines;
 import std.algorithm, std.exception, std.file, std.path, std.process, std.range, std.stdio, std.string, std.typecons;
 
 //------------------------------------------------------------------------------
