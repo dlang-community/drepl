@@ -16,7 +16,7 @@
         },
         {
             "name": "library",
-            "excludedSourceFiles": ["src/drepl.d"],
+            "excludedSourceFiles": ["src/console.d"],
             "targetType": "library",
         },
     ],
