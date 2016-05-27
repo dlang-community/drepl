@@ -3,8 +3,8 @@
   License: Subject to the terms of the MIT license, as written in the included LICENSE file.
   Authors: $(WEB code.dawg.eu, Martin Nowak)
 */
-module dawg.drepl.interpreter;
-import dawg.drepl.engines;
+module drepl.interpreter;
+import drepl.engines;
 import std.algorithm, std.array, std.conv, std.string, std.typecons;
 
 struct InterpreterResult

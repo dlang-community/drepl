@@ -3,8 +3,8 @@
   License: Subject to the terms of the MIT license, as written in the included LICENSE file.
   Authors: $(WEB code.dawg.eu, Martin Nowak)
 */
-module dawg.drepl.engines.echo;
-import dawg.drepl.engines;
+module drepl.engines.echo;
+import drepl.engines;
 import std.typecons, std.string : stripRight;
 
 EchoEngine echoEngine()
