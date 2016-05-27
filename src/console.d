@@ -10,6 +10,8 @@ import drepl;
 
 void main(string[] args)
 {
+    import colorize : color, cwriteln, fg;
+
     writeln("Welcome to D REPL.");
 
     auto history = buildPath(environment.get("HOME", ""), ".drepl_history").toStringz();
@@ -32,12 +34,9 @@ void main(string[] args)
             break;
 
         case success:
-            if (res.stdout.length) writeln(res.stdout);
-            prompt = "D> ";
-            break;
-
         case error:
-            if (res.stderr.length) writeln(res.stderr);
+            if (res.stderr.length) cwriteln(res.stderr.color(fg.red));
+            if (res.stdout.length) cwriteln(res.stdout.color(fg.green));
             prompt = "D> ";
             break;
         }
