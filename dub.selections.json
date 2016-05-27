@@ -1,11 +1,8 @@
 {
 	"fileVersion": 1,
 	"versions": {
-		"libdparse": "~master",
-		"vibe-d": "~master",
-		"libevent": "~master",
-		"openssl": "~master",
-		"libev": "~master",
+		"experimental_allocator": "2.70.0-b1",
+		"libdparse": "0.7.0-alpha9",
 		"linenoise": "~master"
 	}
 }
