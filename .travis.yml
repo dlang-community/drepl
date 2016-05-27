@@ -7,8 +7,8 @@ install:
   # linenoise
   - curl -fsSL https://github.com/antirez/linenoise/archive/1.0.tar.gz | tar -zxf -
   - (cd linenoise-1.0 && cc -shared -fPIC linenoise.c -o liblinenoise.so)
-  - export LIBRARY_PATH="$HOME/linenoise-1.0:$LIBRARY_PATH"
-  - export LD_LIBRARY_PATH="$HOME/linenoise-1.0:$LD_LIBRARY_PATH"
+  - export LIBRARY_PATH="./linenoise-1.0:$LIBRARY_PATH"
+  - export LD_LIBRARY_PATH="./linenoise-1.0:$LD_LIBRARY_PATH"
 
 script:
   - dub test --compiler=$DC
