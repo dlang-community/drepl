@@ -90,11 +90,12 @@ private:
     {
         import dparse.rollback_allocator : RollbackAllocator;
         scope parser = new Parser();
+        RollbackAllocator allocator;
         static bool hasErr;
         hasErr = false;
         parser.fileName = "drepl";
         parser.setTokens(tokens);
-        parser.allocator = new RollbackAllocator();
+        parser.allocator = &allocator;
         parser.messageFunction = (file, ln, col, msg, isErr) { if (isErr) hasErr = true; };
         static if (kind == Kind.Decl)
         {
