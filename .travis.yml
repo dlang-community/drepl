@@ -7,11 +7,6 @@ install:
   - curl -sSL https://github.com/antirez/linenoise/archive/master.tar.gz | tar -zxf -
   - (cd linenoise-master && cc -shared -fPIC linenoise.c -o liblinenoise.so)
   - sudo install -t /usr/lib/x86_64-linux-gnu linenoise-master/liblinenoise.so
-  # yuglify
-  - wget http://nodejs.org/dist/${NODE_VER}/${NODE}.tar.gz
-  - tar -zxf ${NODE}.tar.gz
-  - sudo ${NODE}/bin/npm install -g yuglify
-  - export PATH=${NODE}/bin:${PATH}
 
 script:
   # run unittests for library
