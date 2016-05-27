@@ -1,4 +1,4 @@
-drepl [![Build Status](https://travis-ci.org/MartinNowak/drepl.png)](https://travis-ci.org/MartinNowak/drepl)
+drepl [![Build Status](https://travis-ci.org/drepl/drepl.png)](https://travis-ci.org/drepl/drepl)
 =====
 
 A REPL for D
