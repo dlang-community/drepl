@@ -10,7 +10,7 @@
             "name": "console",
             "mainSourceFile": "src/console.d",
             "dependencies": {
-                "linenoise": "~master"
+                "linenoise": "~>1.0.0"
             },
             "targetType": "executable",
         },
@@ -22,6 +22,6 @@
     ],
     "dependencies": {
         "colorize": "~>1.0.5",
-        "libdparse": "~>0.7.0-alpha9"
+        "libdparse": "~>0.7.0"
     },
 }
