@@ -4,6 +4,6 @@
 		"colorize": "1.0.5",
 		"experimental_allocator": "2.70.0-b1",
 		"libdparse": "0.7.0",
-		"linenoise": "~master"
+		"linenoise": "1.0.0"
 	}
 }
