@@ -12,3 +12,7 @@ How to try it out with Docker?
 Just run `docker run -ti dlanguage/drepl`
 
 Details: https://hub.docker.com/r/dlanguage/drepl/
+
+Supported OS
+------------------------------
+Works on any OS with full shared library suppor by DMD (currently linux, OSX, and FreeBSD).
