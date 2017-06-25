@@ -3,7 +3,7 @@ drepl
 
 A REPL for D.
 
-[![Build Status](https://travis-ci.org/drepl/drepl.png)](https://travis-ci.org/drepl/drepl)
+[![Build Status](https://travis-ci.org/dlang-community/drepl.png)](https://travis-ci.org/dlang-community/drepl)
 [![Join the chat at https://gitter.im/drepl/drepl](https://badges.gitter.im/drepl/drepl.svg)](https://gitter.im/drepl/drepl)
 
 How to try it out with Docker?
