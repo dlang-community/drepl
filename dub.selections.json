@@ -2,8 +2,7 @@
 	"fileVersion": 1,
 	"versions": {
 		"colorize": "1.0.5",
-		"experimental_allocator": "2.70.0-b1",
-		"libdparse": "0.7.0",
+		"libdparse": "0.7.1-beta.6",
 		"linenoise": "1.0.0"
 	}
 }
