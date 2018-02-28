@@ -147,7 +147,7 @@ private:
 
 Interpreter!Engine interpreter(Engine)(return scope Engine e) if (isEngine!Engine)
 {
-    // workaround Issue with return scope detection
+    // workaround Issue 18540
     return Interpreter!Engine(() @trusted { return move(e); }());
 }
 
