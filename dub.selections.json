@@ -3,6 +3,6 @@
 	"versions": {
 		"colorize": "1.0.5",
 		"libdparse": "0.7.1-beta.6",
-		"linenoise": "1.0.0"
+		"linenoise": "1.1.0+1.0.0"
 	}
 }
