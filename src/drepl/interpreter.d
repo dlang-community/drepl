@@ -145,9 +145,10 @@ private:
     Appender!(char[]) _incomplete;
 }
 
-Interpreter!Engine interpreter(Engine)(auto ref Engine e) if (isEngine!Engine)
+Interpreter!Engine interpreter(Engine)(return scope Engine e) if (isEngine!Engine)
 {
-    return Interpreter!Engine(move(e));
+    // workaround Issue with return scope detection
+    return Interpreter!Engine(() @trusted { return move(e); }());
 }
 
 unittest
