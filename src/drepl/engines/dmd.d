@@ -242,7 +242,6 @@ unittest
     dmd = dmdEngine();
     assert(dmd.evalDecl("void foo() {}") == ER(true, "foo"));
     assert(dmd.evalExpr("foo()") == ER(true, "void"));
-    assert(dmd.evalExpr("foo(), 3") == ER(true, "3"));
 
     dmd = dmdEngine();
     assert(dmd.evalDecl("import std.stdio;").success);
