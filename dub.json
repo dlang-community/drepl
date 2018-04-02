@@ -1,0 +1,30 @@
+{
+    "name": "drepl",
+    "description": "A D interpreter.",
+    "copyright": "Copyright © 2014-2016, DREPL team",
+    "license": "BSL-1.0",
+    "authors": ["Martin Nowak"],
+    "lflags-linux-dmd": ["-l:libphobos2.so", "-ldl"],
+    "configurations": [
+        {
+            "name": "console",
+            "mainSourceFile": "src/console.d",
+            "dependencies": {
+                "linenoise": "~>1.1.0"
+            },
+            "targetType": "executable",
+            "subConfigurations": {
+                "linenoise": "vendored"
+            }
+        },
+        {
+            "name": "library",
+            "excludedSourceFiles": ["src/console.d"],
+            "targetType": "library",
+        },
+    ],
+    "dependencies": {
+        "colorize": "~>1.0.5",
+        "libdparse": "~>0.7.0"
+    },
+}
