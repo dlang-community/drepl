@@ -3,8 +3,19 @@ drepl
 
 A REPL for D.
 
+[![DUB Package](https://img.shields.io/dub/v/drepl.svg)](https://code.dlang.org/packages/drepl)
 [![Build Status](https://travis-ci.org/dlang-community/drepl.png)](https://travis-ci.org/dlang-community/drepl)
-[![Join the chat at https://gitter.im/drepl/drepl](https://badges.gitter.im/drepl/drepl.svg)](https://gitter.im/drepl/drepl)
+
+How to run?
+-----------
+
+Install DUB (D's package manager) from the [official releases](https://dlang.org/download.html).
+Then fetch and start the `drepl`:
+
+```bash
+dub fetch drepl
+dub run drepl
+```
 
 How to try it out with Docker?
 ------------------------------
