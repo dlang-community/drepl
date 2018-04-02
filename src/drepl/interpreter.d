@@ -96,7 +96,10 @@ private:
         parser.fileName = "drepl";
         parser.setTokens(tokens);
         parser.allocator = &allocator;
-        parser.messageFunction = (file, ln, col, msg, isErr) { if (isErr) hasErr = true; };
+        parser.messageDg = delegate(string file, size_t ln, size_t col, string msg, bool isErr) {
+            if (isErr)
+                hasErr = true;
+        };
         static if (kind == Kind.Decl)
         {
             do

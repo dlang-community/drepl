@@ -25,6 +25,6 @@
     ],
     "dependencies": {
         "colorize": "~>1.0.5",
-        "libdparse": "~>0.7.0"
+        "libdparse": "~>0.8.0"
     },
 }
