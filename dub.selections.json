@@ -2,8 +2,8 @@
 	"fileVersion": 1,
 	"versions": {
 		"colorize": "1.0.5",
-		"libdparse": "0.8.0",
+		"libdparse": "0.8.7",
 		"linenoise": "1.1.0+1.0.0",
-		"stdx-allocator": "2.77.0"
+		"stdx-allocator": "2.77.2"
 	}
 }
