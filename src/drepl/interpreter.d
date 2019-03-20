@@ -19,10 +19,16 @@ struct Interpreter(Engine) if (isEngine!Engine)
     alias IR = InterpreterResult;
     IR interpret(const(char)[] line)
     {
+        line = stripRight(line);
         // ignore empty lines or comment without incomplete input
         if (!_incomplete.data.length && (!line.length || byToken(cast(ubyte[])line).empty))
             return IR(IR.State.success);
 
+        if (line.endsWith("\\")) {
+            _incomplete.put(line[0 .. line.lastIndexOf("\\")]);
+            return IR(IR.State.incomplete);
+        }
+        
         _incomplete.put(line);
         _incomplete.put('\n');
         auto input = _incomplete.data;
