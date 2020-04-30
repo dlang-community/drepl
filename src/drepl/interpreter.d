@@ -9,7 +9,13 @@ import std.algorithm, std.array, std.conv, std.string, std.typecons;
 
 struct InterpreterResult
 {
-    enum State { success, error, incomplete };
+    enum State
+    {
+        success,
+        error,
+        incomplete
+    }
+
     State state;
     string stdout, stderr;
 }
@@ -65,7 +71,8 @@ struct Interpreter(Engine) if (isEngine!Engine)
 private:
     enum Kind { Decl, Stmt, Expr, WhiteSpace, Incomplete, Error, }
 
-    import dparse.lexer, dparse.parser, dparse.rollback_allocator;
+    import dparse.lexer : getTokensForParser, LexerConfig, byToken, Token, StringCache, tok;
+    import dparse.parser : Parser;
 
     Kind classify(in char[] input)
     {
