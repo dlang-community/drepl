@@ -103,7 +103,7 @@ private:
         parser.fileName = "drepl";
         parser.setTokens(tokens);
         parser.allocator = &allocator;
-        parser.messageDg = delegate(string file, size_t ln, size_t col, string msg, bool isErr) {
+        parser.messageDg = delegate(string file, size_t ln, size_t col, string msg, bool isErr) { // @suppress(dscanner.suspicious.unused_parameter)
             if (isErr)
                 hasErr = true;
         };
