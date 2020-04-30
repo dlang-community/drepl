@@ -11,6 +11,7 @@ install:
   - export LD_LIBRARY_PATH="./linenoise-1.0:$LD_LIBRARY_PATH"
 
 script:
+  - dub lint
   - dub test --compiler=$DC
   - dub build --compiler=$DC
   - echo 10+3 | dub --compiler=$DC | grep 13
