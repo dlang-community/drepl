@@ -24,7 +24,9 @@ string mkdtemp()
     }
     else
     {
-        import std.format, std.random;
+        import std.format : format;
+        import std.random: uniform;
+
         string path;
         do
         {
@@ -38,7 +40,6 @@ string mkdtemp()
 
 DMDEngine dmdEngine()
 {
-    import core.sys.posix.unistd, std.random;
     auto compiler = environment.get("DMD", "dmd");
     auto tmpDir = mkdtemp();
     return DMDEngine(compiler, tmpDir);
@@ -193,7 +194,7 @@ private:
 
     string compileModule(string path)
     {
-        import std.regex;
+        import std.regex: ctRegex, replaceAll;
         auto args = [_compiler, "-I"~_tmpDir, "-of"~path~".so", "-fPIC",
                      "-shared", path, "-L-l:libphobos2.so"];
         foreach (i; 0 .. _id)
@@ -209,7 +210,8 @@ private:
 
     void* loadFunc(string path, string name)
     {
-        import core.runtime, core.demangle, core.sys.posix.dlfcn;
+        import core.runtime: Runtime;
+        import core.sys.posix.dlfcn: dlerror, dlsym;
 
         auto lib = Runtime.loadLibrary(path~".so");
         if (lib is null)
@@ -253,7 +255,7 @@ unittest
     alias ER = EngineResult;
     auto dmd = dmdEngine();
     assert(dmd.evalDecl("void foo(int) {}") == ER(true, "foo"));
-    auto er = dmd.evalStmt("foo(\"foo\");");
+    const auto er = dmd.evalStmt("foo(\"foo\");");
     assert(!er.success);
     assert(er.stdout.empty);
     assert(!er.stderr.empty);
