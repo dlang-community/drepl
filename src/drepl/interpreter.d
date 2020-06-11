@@ -122,26 +122,29 @@ private:
         return !hasErr;
     }
 
-    unittest
+    static if (is(Engine == EchoEngine))
     {
-        auto intp = interpreter(echoEngine());
-        assert(intp.classify("3+2") == Kind.Expr);
-        // only single expressions
-        assert(intp.classify("3+2 foo()") == Kind.Error);
-        assert(intp.classify("3+2;") == Kind.Stmt);
-        // multiple statements
-        assert(intp.classify("3+2; foo();") == Kind.Stmt);
-        assert(intp.classify("struct Foo {}") == Kind.Decl);
-        // multiple declarations
-        assert(intp.classify("void foo() {} void bar() {}") == Kind.Decl);
-        // can't currently mix declarations and statements
-        assert(intp.classify("void foo() {} foo();") == Kind.Error);
-        // or declarations and expressions
-        assert(intp.classify("void foo() {} foo()") == Kind.Error);
-        // or statments and expressions
-        assert(intp.classify("foo(); foo()") == Kind.Error);
+        unittest
+        {
+            auto intp = interpreter(echoEngine());
+            assert(intp.classify("3+2") == Kind.Expr);
+            // only single expressions
+            assert(intp.classify("3+2 foo()") == Kind.Error);
+            assert(intp.classify("3+2;") == Kind.Stmt);
+            // multiple statements
+            assert(intp.classify("3+2; foo();") == Kind.Stmt);
+            assert(intp.classify("struct Foo {}") == Kind.Decl);
+            // multiple declarations
+            assert(intp.classify("void foo() {} void bar() {}") == Kind.Decl);
+            // can't currently mix declarations and statements
+            assert(intp.classify("void foo() {} foo();") == Kind.Error);
+            // or declarations and expressions
+            assert(intp.classify("void foo() {} foo()") == Kind.Error);
+            // or statments and expressions
+            assert(intp.classify("foo(); foo()") == Kind.Error);
 
-        assert(intp.classify("import std.stdio;") == Kind.Decl);
+            assert(intp.classify("import std.stdio;") == Kind.Decl);
+        }
     }
 
     Engine _engine;
@@ -152,6 +155,12 @@ Interpreter!Engine interpreter(Engine)(return scope Engine e) if (isEngine!Engin
 {
     // workaround Issue 18540
     return Interpreter!Engine(() @trusted { return move(e); }());
+}
+
+unittest
+{
+    // test instantiated
+    auto i = interpreter(dmdEngine());
 }
 
 unittest
