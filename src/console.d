@@ -8,7 +8,7 @@ import core.stdc.string : strlen;
 import deimos.linenoise;
 import drepl;
 
-void main(string[] args)
+void main()
 {
     import colorize : color, cwriteln, fg;
 

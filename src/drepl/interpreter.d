@@ -9,7 +9,13 @@ import std.algorithm, std.array, std.conv, std.string, std.typecons;
 
 struct InterpreterResult
 {
-    enum State { success, error, incomplete };
+    enum State
+    {
+        success,
+        error,
+        incomplete
+    }
+
     State state;
     string stdout, stderr;
 }
@@ -65,7 +71,8 @@ struct Interpreter(Engine) if (isEngine!Engine)
 private:
     enum Kind { Decl, Stmt, Expr, WhiteSpace, Incomplete, Error, }
 
-    import dparse.lexer, dparse.parser, dparse.rollback_allocator;
+    import dparse.lexer : getTokensForParser, LexerConfig, byToken, Token, StringCache, tok;
+    import dparse.parser : Parser;
 
     Kind classify(in char[] input)
     {
@@ -96,10 +103,11 @@ private:
         parser.fileName = "drepl";
         parser.setTokens(tokens);
         parser.allocator = &allocator;
-        parser.messageDg = delegate(string file, size_t ln, size_t col, string msg, bool isErr) {
-            if (isErr)
-                hasErr = true;
-        };
+
+        void messageDg (string, size_t, size_t, string, bool isErr) {
+            if (isErr) hasErr = true;
+        }
+        parser.messageDg = &messageDg;
         static if (kind == Kind.Decl)
         {
             do
