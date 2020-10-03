@@ -174,7 +174,10 @@ Interpreter!Engine interpreter(Engine)(return scope Engine e) if (isEngine!Engin
 unittest
 {
     // test instantiated
-    auto i = interpreter(dmdEngine());
+    const auto i = interpreter(dmdEngine());
+
+    // mark this as used
+    cast(void) i;
 }
 
 unittest
