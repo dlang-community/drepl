@@ -110,10 +110,10 @@ private:
         parser.setTokens(tokens);
         parser.allocator = &allocator;
 
-        void messageDg (string, size_t, size_t, string, bool isErr) {
+        void messageDelegate (string, size_t, size_t, string, bool isErr) {
             if (isErr) hasErr = true;
         }
-        parser.messageDg = &messageDg;
+        parser.messageDelegate = &messageDelegate;
         static if (kind == Kind.Decl)
         {
             do
