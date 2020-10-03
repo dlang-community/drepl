@@ -1,5 +1,5 @@
+# D
 .dub
-drepl_console
-drepl_server
-ssl
-drepl
+
+# Build files
+/bin
