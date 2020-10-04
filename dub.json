@@ -4,7 +4,9 @@
     "copyright": "Copyright © 2014-2016, DREPL team",
     "license": "BSL-1.0",
     "authors": ["Martin Nowak"],
-    "lflags-linux-dmd": ["-l:libphobos2.so", "-ldl"],
+    "lflags-linux-dmd": ["-l:libphobos2.so"],
+    "lflags-linux-ldc": ["-l:libphobos2-ldc-shared.so", "-l:libdruntime-ldc-shared.so"],
+    "lflags-linux": ["-ldl"],
     "targetPath": "bin/",
     "configurations": [
         {
