@@ -5,6 +5,7 @@
     "license": "BSL-1.0",
     "authors": ["Martin Nowak"],
     "lflags-linux-dmd": ["-l:libphobos2.so", "-ldl"],
+    "targetPath": "bin/",
     "configurations": [
         {
             "name": "console",
