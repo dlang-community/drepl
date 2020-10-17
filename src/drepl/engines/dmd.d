@@ -40,7 +40,10 @@ string mkdtemp()
 
 DMDEngine dmdEngine()
 {
-    auto compiler = environment.get("DMD", "dmd");
+	version(DigitalMars)
+        auto compiler = environment.get("DMD", "dmd");
+    else version(LDC)
+        auto compiler = environment.get("DMD", "ldmd2");
     auto tmpDir = mkdtemp();
     return DMDEngine(compiler, tmpDir);
 }
@@ -194,9 +197,21 @@ private:
 
     string compileModule(string path)
     {
+        string[] linkerArgs;
+        final switch(_compiler)
+        {
+            case "dmd":
+                linkerArgs = ["-L-l:libphobos2.so"];
+                break;
+            case "ldmd":
+            case "ldmd2":
+                linkerArgs = ["-L-l:libphobos2-ldc-shared.so"];
+                break;
+        }
+
         import std.regex: ctRegex, replaceAll;
         auto args = [_compiler, "-I"~_tmpDir, "-of"~path~".so", "-fPIC",
-                     "-shared", path, "-L-l:libphobos2.so"];
+                     "-shared", path] ~ linkerArgs;
         foreach (i; 0 .. _id)
             args ~= "-L"~_tmpDir~format("/_mod%s.so", i);
         auto dmd = execute(args);

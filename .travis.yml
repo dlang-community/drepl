@@ -1,6 +1,8 @@
 language: d
 d:
   - dmd
+  - ldc
+
 sudo: false
 
 install:
