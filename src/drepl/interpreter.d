@@ -74,7 +74,6 @@ struct Interpreter(Engine) if (isEngine!Engine)
         return IR(res.success ? IR.State.success : IR.State.error, res.stdout, res.stderr);
     }
 
-private:
     enum Kind { Decl, Stmt, Expr, WhiteSpace, Incomplete, Error, }
 
     import dparse.lexer : getTokensForParser, LexerConfig, byToken, Token, StringCache, tok;
